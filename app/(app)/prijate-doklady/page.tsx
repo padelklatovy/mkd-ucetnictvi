@@ -49,12 +49,20 @@ export default async function PrijateDokladyPage({
           <h1 className="text-xl font-semibold text-slate-900">Přijaté doklady</h1>
           <p className="text-sm text-slate-500 mt-0.5">Faktury a doklady od dodavatelů</p>
         </div>
-        <Link
-          href="/prijate-doklady/novy"
-          className="rounded-md bg-[#1e3a5f] px-4 py-2 text-sm font-medium text-white hover:bg-[#14293f]"
-        >
-          + Nový doklad
-        </Link>
+        <div className="flex gap-2">
+          <Link
+            href="/prijate-doklady/hromadne-nahrani"
+            className="rounded-md border border-[#1e3a5f] bg-white px-4 py-2 text-sm font-medium text-[#1e3a5f] hover:bg-slate-50"
+          >
+            📷 Hromadně nahrát a vytěžit AI
+          </Link>
+          <Link
+            href="/prijate-doklady/novy"
+            className="rounded-md bg-[#1e3a5f] px-4 py-2 text-sm font-medium text-white hover:bg-[#14293f]"
+          >
+            + Nový doklad
+          </Link>
+        </div>
       </div>
 
       <form className="mb-4 flex gap-3" action="/prijate-doklady">
