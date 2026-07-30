@@ -58,16 +58,28 @@ select id, email from auth.users where email = 'jmeno@example.com';
 Bez záznamu v `company_users` uživatel po přihlášení uvidí jen informační hlášku – RLS
 politiky mu (správně) nedovolí vidět žádná data.
 
-## Stav vývoje (etapy)
+## AI vytěžování dokladů (beta)
+
+U každé nahrané přílohy (PDF/JPG/PNG) je tlačítko **Vytěžit AI**, které pošle soubor na
+Anthropic API (Claude) a vrátí návrh vyplnění polí (dodavatel, IČO, DIČ, číslo dokladu, data,
+částky, sazba DPH). Nic se nikam neuklada bez potvrzeni - tlacitko "Prenest vse do formulare" jen predvyplni pole, uzivatel pred ulozenim vsechno vidi a muze opravit. Zadny doklad se automaticky neschvaluje ani neuklada jen na zaklade odpovedi AI.
+
+Vyžaduje vlastní Anthropic API klíč v proměnné `ANTHROPIC_API_KEY` (server-only, nikdy s
+prefixem `NEXT_PUBLIC_`) - viz `.env.local.example`. Bez klíče appka funguje dál normálně,
+jen tlačítko Vytěžit AI vrátí chybovou hlášku. Každé volání stojí reálné peníze na Anthropic
+účtu (cena za obrázek/PDF + pár desítek tokenů odpovědi), proto se to spouští jen ručně na
+vyžádání, ne automaticky při nahrání souboru.
 
 - [x] Etapa 1 – scaffold, DB schéma, RLS, role, audit log, demo data (MKD Enterprise)
 - [x] Etapa 2 – Přijaté doklady (CRUD), Přehled (dashboard s reálnými daty)
 - [x] Vydané doklady – základní evidence a sledování úhrady
 - [x] Autentizace (Supabase Auth, přihlášení/registrace/odhlášení, ochrana rout přes `proxy.ts`)
+- [x] Nahrávání příloh do Supabase Storage (neveřejný bucket `doklady`)
+- [x] AI vytěžování dat z přílohy (beta, vyžaduje `ANTHROPIC_API_KEY`)
 - [ ] Etapa 3 – Banka: ruční zadání transakcí, CSV import, detekce duplicit
 - [ ] Etapa 4 – Párování dokladů s platbami (bodové skóre, potvrzení uživatelem)
 - [ ] Etapa 5 – Ke kontrole (přehled nesrovnalostí)
-- [ ] Etapa 6 – Nahrávání příloh do Supabase Storage (neveřejný bucket)
+- [ ] Etapa 7 – Exporty CSV/XLSX pro účetní firmu
 - [ ] Etapa 7 – Exporty CSV/XLSX pro účetní firmu
 - [ ] Etapa 8 – Napojení na Fio API (datový model už je připraven – `bank_accounts.fio_token_ref`,
       `bank_transactions.source`)

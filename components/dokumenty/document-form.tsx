@@ -56,6 +56,7 @@ export function DocumentForm({
         {field(
           "Číslo dokladu",
           <input
+            id="field-document_number"
             name="document_number"
             defaultValue={document?.document_number ?? ""}
             className={inputClass}
@@ -78,11 +79,21 @@ export function DocumentForm({
         )}
         {field(
           "IČO partnera",
-          <input name="partner_ico" defaultValue={document?.partner_ico ?? ""} className={inputClass} />
+          <input
+            id="field-partner_ico"
+            name="partner_ico"
+            defaultValue={document?.partner_ico ?? ""}
+            className={inputClass}
+          />
         )}
         {field(
           "DIČ partnera",
-          <input name="partner_dic" defaultValue={document?.partner_dic ?? ""} className={inputClass} />
+          <input
+            id="field-partner_dic"
+            name="partner_dic"
+            defaultValue={document?.partner_dic ?? ""}
+            className={inputClass}
+          />
         )}
       </div>
 
@@ -90,6 +101,7 @@ export function DocumentForm({
         {field(
           "Datum vystavení",
           <input
+            id="field-issue_date"
             type="date"
             name="issue_date"
             defaultValue={document?.issue_date ?? ""}
@@ -99,6 +111,7 @@ export function DocumentForm({
         {field(
           "DUZP",
           <input
+            id="field-taxable_supply_date"
             type="date"
             name="taxable_supply_date"
             defaultValue={document?.taxable_supply_date ?? ""}
@@ -108,6 +121,7 @@ export function DocumentForm({
         {field(
           "Datum splatnosti",
           <input
+            id="field-due_date"
             type="date"
             name="due_date"
             defaultValue={document?.due_date ?? ""}
@@ -129,6 +143,7 @@ export function DocumentForm({
         {field(
           "Částka bez DPH",
           <input
+            id="field-amount_excl_vat"
             type="number"
             step="0.01"
             name="amount_excl_vat"
@@ -138,7 +153,12 @@ export function DocumentForm({
         )}
         {field(
           "Sazba DPH",
-          <select name="vat_rate" defaultValue={document?.vat_rate ?? "zakladni"} className={inputClass}>
+          <select
+            id="field-vat_rate"
+            name="vat_rate"
+            defaultValue={document?.vat_rate ?? "zakladni"}
+            className={inputClass}
+          >
             {vatRates.map((r) => (
               <option key={r} value={r}>
                 {vatRateLabels[r]}
@@ -149,6 +169,7 @@ export function DocumentForm({
         {field(
           "Částka DPH",
           <input
+            id="field-vat_amount"
             type="number"
             step="0.01"
             name="vat_amount"
@@ -158,14 +179,24 @@ export function DocumentForm({
         )}
         {field(
           "Měna",
-          <input name="currency" defaultValue={document?.currency ?? "CZK"} className={inputClass} />
+          <input
+            id="field-currency"
+            name="currency"
+            defaultValue={document?.currency ?? "CZK"}
+            className={inputClass}
+          />
         )}
       </div>
 
       <div className="grid grid-cols-3 gap-4">
         {field(
           "Variabilní symbol",
-          <input name="variable_symbol" defaultValue={document?.variable_symbol ?? ""} className={inputClass} />
+          <input
+            id="field-variable_symbol"
+            name="variable_symbol"
+            defaultValue={document?.variable_symbol ?? ""}
+            className={inputClass}
+          />
         )}
         {field(
           "Způsob úhrady",
@@ -228,10 +259,12 @@ export function DocumentForm({
         />
       )}
 
-      <div className="rounded-md border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-xs text-slate-500">
-        Nahrávání příloh (PDF/JPG/PNG) bude doplněno v další etapě – zatím doklad uložte a
-        přílohu přidejte ručně do Supabase Storage.
-      </div>
+      {!document ? (
+        <div className="rounded-md border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-xs text-slate-500">
+          Přílohy (PDF/JPG/PNG) půjde nahrát po uložení dokladu – otevřete ho pak znovu z
+          detailu.
+        </div>
+      ) : null}
 
       <div className="flex gap-3">
         <button
