@@ -12,7 +12,7 @@ export default async function VydaneDokladyPage() {
 
   const { data: documents, error } = await supabase
     .from("documents")
-    .select("id,document_number,partner_ico,customer_name,amount_total,due_date,paid_date,status,created_at,business_partners(name)")
+    .select("id,document_number,partner_ico,customer_name,issue_date,amount_total,due_date,paid_date,status,created_at,business_partners(name)")
     .eq("company_id", DEFAULT_COMPANY_ID)
     .eq("direction", "vydany")
     .eq("is_archived", false)
@@ -39,8 +39,8 @@ export default async function VydaneDokladyPage() {
         <table className="w-full text-sm">
           <thead>
             <tr className="text-left text-xs text-slate-400 border-b border-slate-100">
-              <th className="px-4 py-2.5 font-medium">Č. dokladu</th>
               <th className="px-4 py-2.5 font-medium">Odběratel</th>
+              <th className="px-4 py-2.5 font-medium">Vystaveno</th>
               <th className="px-4 py-2.5 font-medium">Splatnost</th>
               <th className="px-4 py-2.5 font-medium text-right">Částka</th>
               <th className="px-4 py-2.5 font-medium">Stav</th>
@@ -53,13 +53,13 @@ export default async function VydaneDokladyPage() {
                 <tr key={doc.id} className="border-b border-slate-50 last:border-0 hover:bg-slate-50">
                   <td className="px-4 py-2.5">
                     <Link href={`/vydane-doklady/${doc.id}`} className="text-[#1e3a5f] hover:underline font-medium">
-                      {doc.document_number ?? "(bez čísla)"}
+                      {(doc as unknown as { business_partners?: { name: string } | null }).business_partners
+                        ?.name ??
+                        doc.customer_name ??
+                        "(bez jména)"}
                     </Link>
                   </td>
-                  <td className="px-4 py-2.5">
-                    {(doc as unknown as { business_partners?: { name: string } | null }).business_partners
-                      ?.name ?? doc.customer_name ?? "—"}
-                  </td>
+                  <td className="px-4 py-2.5 text-slate-500">{formatDate(doc.issue_date)}</td>
                   <td className={`px-4 py-2.5 ${overdue ? "text-red-600 font-medium" : ""}`}>
                     {formatDate(doc.due_date)}
                   </td>
