@@ -330,6 +330,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           currency: string
+          customer_name: string | null
           direction: Database["public"]["Enums"]["document_direction"]
           doc_type: Database["public"]["Enums"]["document_type"]
           document_number: string | null
@@ -347,6 +348,7 @@ export type Database = {
           partner_id: string | null
           payment_method: Database["public"]["Enums"]["payment_method"]
           project_id: string | null
+          revenue_source: string | null
           status: Database["public"]["Enums"]["document_status"]
           taxable_supply_date: string | null
           updated_at: string
@@ -362,6 +364,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           currency?: string
+          customer_name?: string | null
           direction: Database["public"]["Enums"]["document_direction"]
           doc_type?: Database["public"]["Enums"]["document_type"]
           document_number?: string | null
@@ -379,6 +382,7 @@ export type Database = {
           partner_id?: string | null
           payment_method?: Database["public"]["Enums"]["payment_method"]
           project_id?: string | null
+          revenue_source?: string | null
           status?: Database["public"]["Enums"]["document_status"]
           taxable_supply_date?: string | null
           updated_at?: string
@@ -394,6 +398,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           currency?: string
+          customer_name?: string | null
           direction?: Database["public"]["Enums"]["document_direction"]
           doc_type?: Database["public"]["Enums"]["document_type"]
           document_number?: string | null
@@ -411,6 +416,7 @@ export type Database = {
           partner_id?: string | null
           payment_method?: Database["public"]["Enums"]["payment_method"]
           project_id?: string | null
+          revenue_source?: string | null
           status?: Database["public"]["Enums"]["document_status"]
           taxable_supply_date?: string | null
           updated_at?: string
@@ -515,6 +521,19 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      import_fio_bar_payment: {
+        Args: {
+          p_amount: number
+          p_fio_transaction_id: string
+          p_message_for_recipient: string | null
+          p_payer_account: string | null
+          p_payer_name: string | null
+          p_secret: string
+          p_transaction_date: string
+          p_variable_symbol: string | null
+        }
+        Returns: string
+      }
       import_padel_reservation: {
         Args: {
           p_amount: number

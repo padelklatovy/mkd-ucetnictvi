@@ -112,6 +112,21 @@ období a kliknete Importovat.
    ```
    Vercel pak sám posílá `Authorization: Bearer <CRON_SECRET>` podle dokumentace Vercel Cron Jobs.
 
+**Rozlišení zdroje platby (jen Fio, dva toky):** sloupec `documents.revenue_source`:
+- `'fio'` – platba spárovaná s konkrétní rezervací (přes `import_padel_reservation` /
+  `get_accounting_export`),
+- `'fio_vs406'` – platba na místě přes stálý barový QR kód (VS 406), **bez vazby na rezervaci**
+  (přes `import_fio_bar_payment` / navrhovanou `get_bar_payments_export` na straně rezervačního
+  systému - kontrakt zatím čeká na implementaci tam, funkce v naší appce je připravená).
+
+Žádná ČSOB - obě cesty jdou přes stejný Fio účet.
+
+**Měsíční export (`/exporty`):** přehled tržeb za pronájem kurtu za zvolený měsíc, rozdělený na
+"Fio - spárováno s rezervací" / "Fio VS 406 - na místě", se základem DPH, DPH 12 % a celkovou
+částkou. Lze stáhnout jako CSV (`/api/exports/padel-revenue?month=YYYY-MM`). Nespárované
+bankovní platby, uhrazené rezervace bez transakce a nejednoznačné případy k ruční kontrole
+**v tomto exportu zatím nejsou** - ta data žijí v rezervačním systému.
+
 ## Databázové tabulky
 
 `companies`, `profiles`, `company_users`, `categories`, `projects`, `business_partners`,

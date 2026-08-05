@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { importPadelReservations } from "@/app/(app)/prijate-doklady/actions";
+import { importPadelReservations, importFioBarPayments } from "@/app/(app)/prijate-doklady/actions";
 import type { PadelSyncResult } from "@/lib/integrations/padel-sync";
 
 function isoDaysAgo(days: number) {
@@ -10,22 +10,61 @@ function isoDaysAgo(days: number) {
   return d.toISOString().slice(0, 10);
 }
 
+function monthOptions() {
+  const opts: { value: string; label: string }[] = [];
+  const now = new Date();
+  const monthNames = [
+    "leden", "únor", "březen", "duben", "květen", "červen",
+    "červenec", "srpen", "září", "říjen", "listopad", "prosinec",
+  ];
+  for (let i = 0; i < 12; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    opts.push({ value, label: `${monthNames[d.getMonth()]} ${d.getFullYear()}` });
+  }
+  return opts;
+}
+
+function monthBounds(monthValue: string) {
+  const [year, month] = monthValue.split("-").map(Number);
+  const from = new Date(year, month - 1, 1);
+  const to = new Date(year, month, 0);
+  return { from: from.toISOString().slice(0, 10), to: to.toISOString().slice(0, 10) };
+}
+
 export function PadelImportPanel() {
   const [dateFrom, setDateFrom] = useState(isoDaysAgo(7));
   const [dateTo, setDateTo] = useState(isoDaysAgo(0));
-  const [isPending, startTransition] = useTransition();
-  const [result, setResult] = useState<PadelSyncResult | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [selectedMonth, setSelectedMonth] = useState("");
+  const [isPendingReservations, startReservations] = useTransition();
+  const [isPendingBar, startBar] = useTransition();
+  const [resultReservations, setResultReservations] = useState<PadelSyncResult | null>(null);
+  const [resultBar, setResultBar] = useState<PadelSyncResult | null>(null);
+  const [errorReservations, setErrorReservations] = useState<string | null>(null);
+  const [errorBar, setErrorBar] = useState<string | null>(null);
 
-  function handleImport() {
-    setError(null);
-    setResult(null);
-    startTransition(async () => {
+  function handleImportReservations() {
+    setErrorReservations(null);
+    setResultReservations(null);
+    startReservations(async () => {
       try {
         const r = await importPadelReservations(dateFrom, dateTo);
-        setResult(r);
+        setResultReservations(r);
       } catch (e) {
-        setError(e instanceof Error ? e.message : "Import selhal.");
+        setErrorReservations(e instanceof Error ? e.message : "Import selhal.");
+      }
+    });
+  }
+
+  function handleImportBar() {
+    setErrorBar(null);
+    setResultBar(null);
+    startBar(async () => {
+      try {
+        const r = await importFioBarPayments(dateFrom, dateTo);
+        setResultBar(r);
+      } catch (e) {
+        setErrorBar(e instanceof Error ? e.message : "Import selhal.");
       }
     });
   }
@@ -33,15 +72,41 @@ export function PadelImportPanel() {
   return (
     <div className="mb-4 rounded-lg border border-slate-200 bg-white p-4">
       <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">
-        Import zaplacených rezervací z rezervačního systému
+        Import tržeb za kurty (Fio)
       </div>
-      <div className="flex flex-wrap items-end gap-3">
+      <div className="flex flex-wrap items-end gap-3 mb-4">
+        <label className="text-xs">
+          <span className="block text-slate-500 mb-1">Kalendářní měsíc</span>
+          <select
+            value={selectedMonth}
+            onChange={(e) => {
+              const value = e.target.value;
+              setSelectedMonth(value);
+              if (value) {
+                const { from, to } = monthBounds(value);
+                setDateFrom(from);
+                setDateTo(to);
+              }
+            }}
+            className="rounded-md border border-slate-300 px-2 py-1.5 text-sm bg-white"
+          >
+            <option value="">— vlastní rozsah —</option>
+            {monthOptions().map((m) => (
+              <option key={m.value} value={m.value}>
+                {m.label}
+              </option>
+            ))}
+          </select>
+        </label>
         <label className="text-xs">
           <span className="block text-slate-500 mb-1">Od</span>
           <input
             type="date"
             value={dateFrom}
-            onChange={(e) => setDateFrom(e.target.value)}
+            onChange={(e) => {
+              setDateFrom(e.target.value);
+              setSelectedMonth("");
+            }}
             className="rounded-md border border-slate-300 px-2 py-1.5 text-sm"
           />
         </label>
@@ -50,34 +115,67 @@ export function PadelImportPanel() {
           <input
             type="date"
             value={dateTo}
-            onChange={(e) => setDateTo(e.target.value)}
+            onChange={(e) => {
+              setDateTo(e.target.value);
+              setSelectedMonth("");
+            }}
             className="rounded-md border border-slate-300 px-2 py-1.5 text-sm"
           />
         </label>
-        <button
-          type="button"
-          onClick={handleImport}
-          disabled={isPending}
-          className="rounded-md bg-[#1e3a5f] px-4 py-1.5 text-sm font-medium text-white hover:bg-[#14293f] disabled:opacity-50"
-        >
-          {isPending ? "Importuji…" : "Importovat rezervace"}
-        </button>
         <span className="text-[11px] text-slate-400">
           Opakované spuštění pro stejné období nic neduplikuje.
         </span>
       </div>
 
-      {error ? <p className="mt-3 text-xs text-red-600">{error}</p> : null}
-
-      {result ? (
-        <p className="mt-3 text-xs text-slate-600">
-          Staženo {result.fetched} rezervací, uloženo/aktualizováno {result.imported}
-          {result.skipped > 0 ? `, přeskočeno ${result.skipped} (nulová částka)` : ""}.
-          {result.errors.length > 0 ? (
-            <span className="text-red-600"> Chyby: {result.errors.length} (viz konzole).</span>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="rounded-md border border-slate-100 bg-slate-50 p-3">
+          <div className="text-xs font-medium text-slate-600 mb-2">
+            Fio – platby spárované s rezervací
+          </div>
+          <button
+            type="button"
+            onClick={handleImportReservations}
+            disabled={isPendingReservations}
+            className="rounded-md bg-[#1e3a5f] px-3 py-1.5 text-xs font-medium text-white hover:bg-[#14293f] disabled:opacity-50"
+          >
+            {isPendingReservations ? "Importuji…" : "Importovat rezervace"}
+          </button>
+          {errorReservations ? <p className="mt-2 text-xs text-red-600">{errorReservations}</p> : null}
+          {resultReservations ? (
+            <p className="mt-2 text-xs text-slate-600">
+              Staženo {resultReservations.fetched}, uloženo {resultReservations.imported}
+              {resultReservations.skipped > 0 ? `, přeskočeno ${resultReservations.skipped}` : ""}.
+              {resultReservations.errors.length > 0 ? (
+                <span className="text-red-600"> Chyby: {resultReservations.errors.length}.</span>
+              ) : null}
+            </p>
           ) : null}
-        </p>
-      ) : null}
+        </div>
+
+        <div className="rounded-md border border-slate-100 bg-slate-50 p-3">
+          <div className="text-xs font-medium text-slate-600 mb-2">
+            Fio – platby na místě (barový QR, VS 406)
+          </div>
+          <button
+            type="button"
+            onClick={handleImportBar}
+            disabled={isPendingBar}
+            className="rounded-md bg-[#1e3a5f] px-3 py-1.5 text-xs font-medium text-white hover:bg-[#14293f] disabled:opacity-50"
+          >
+            {isPendingBar ? "Importuji…" : "Importovat platby na místě"}
+          </button>
+          {errorBar ? <p className="mt-2 text-xs text-red-600">{errorBar}</p> : null}
+          {resultBar ? (
+            <p className="mt-2 text-xs text-slate-600">
+              Staženo {resultBar.fetched}, uloženo {resultBar.imported}
+              {resultBar.skipped > 0 ? `, přeskočeno ${resultBar.skipped}` : ""}.
+              {resultBar.errors.length > 0 ? (
+                <span className="text-red-600"> Chyby: {resultBar.errors.length}.</span>
+              ) : null}
+            </p>
+          ) : null}
+        </div>
+      </div>
     </div>
   );
 }

@@ -9,7 +9,7 @@ import {
   extractDocumentDataFromFile,
   type ExtractedDocumentData,
 } from "@/lib/ai/extract-document";
-import { syncPadelReservations, type PadelSyncResult } from "@/lib/integrations/padel-sync";
+import { syncPadelReservations, syncFioBarPayments, type PadelSyncResult } from "@/lib/integrations/padel-sync";
 
 function num(v: FormDataEntryValue | null): number {
   if (!v) return 0;
@@ -378,6 +378,16 @@ export async function importPadelReservations(
   dateTo: string
 ): Promise<PadelSyncResult> {
   const result = await syncPadelReservations(dateFrom, dateTo);
+  revalidatePath("/vydane-doklady");
+  revalidatePath("/prehled");
+  return result;
+}
+
+export async function importFioBarPayments(
+  dateFrom: string,
+  dateTo: string
+): Promise<PadelSyncResult> {
+  const result = await syncFioBarPayments(dateFrom, dateTo);
   revalidatePath("/vydane-doklady");
   revalidatePath("/prehled");
   return result;

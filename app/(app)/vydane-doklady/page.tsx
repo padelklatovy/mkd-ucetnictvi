@@ -12,7 +12,7 @@ export default async function VydaneDokladyPage() {
 
   const { data: documents, error } = await supabase
     .from("documents")
-    .select("id,document_number,partner_ico,amount_total,due_date,paid_date,status,created_at,business_partners(name)")
+    .select("id,document_number,partner_ico,customer_name,amount_total,due_date,paid_date,status,created_at,business_partners(name)")
     .eq("company_id", DEFAULT_COMPANY_ID)
     .eq("direction", "vydany")
     .eq("is_archived", false)
@@ -58,7 +58,7 @@ export default async function VydaneDokladyPage() {
                   </td>
                   <td className="px-4 py-2.5">
                     {(doc as unknown as { business_partners?: { name: string } | null }).business_partners
-                      ?.name ?? "—"}
+                      ?.name ?? doc.customer_name ?? "—"}
                   </td>
                   <td className={`px-4 py-2.5 ${overdue ? "text-red-600 font-medium" : ""}`}>
                     {formatDate(doc.due_date)}
