@@ -84,6 +84,34 @@ vyžádání, ne automaticky při nahrání souboru.
 - [ ] Etapa 8 – Napojení na Fio API (datový model už je připraven – `bank_accounts.fio_token_ref`,
       `bank_transactions.source`)
 
+## Import rezervací z rezervačního systému (Padel Klatovy)
+
+Zaplacené rezervace (`paid_confirmed`) z appky `padel-klatovy-core` se dají naimportovat jako
+Vydané doklady, ať je má účetní hotové bez ručního přepisování.
+
+**Jak to funguje:** appka `ucetnictvi` se serverově dotáže RPC funkce `get_accounting_export`
+v Supabase projektu rezervačního systému (`padel-kalendar`), chráněné vlastním tajným klíčem.
+Výsledek se uloží přes vlastní RPC funkci `import_padel_reservation` (Supabase projekt
+`ucetnictvi`), která je taky chráněná tajným klíčem a řeší deduplikaci podle `reservation_id`
+(sloupce `external_source` + `external_id` na `documents`) - opakovaný běh nic neduplikuje, jen
+aktualizuje.
+
+Sazba DPH je pevně nastavená na **12 % (snížená)** pro tržby za pronájem kurtu/vstup na
+sportoviště - potvrzeno uživatelem. Pokud se sazba v budoucnu změní, upravte konstantu přímo ve
+funkci `import_padel_reservation` v Supabase (SQL editor nebo nová migrace).
+
+**Ruční spuštění:** na stránce Vydané doklady je panel "Import zaplacených rezervací" - zvolíte
+období a kliknete Importovat.
+
+**Automatický denní běh (volitelné):** endpoint `app/api/cron/sync-padel/route.ts` stáhne
+"včerejší" rezervace. Ve výchozím stavu je vypnutý (bez `CRON_SECRET` vrací 401). Pro zapnutí:
+1. Nastavte `CRON_SECRET` na náhodný řetězec (v `.env.local` i ve Vercel Environment Variables).
+2. Do `vercel.json` v rootu projektu přidejte:
+   ```json
+   { "crons": [{ "path": "/api/cron/sync-padel", "schedule": "0 3 * * *" }] }
+   ```
+   Vercel pak sám posílá `Authorization: Bearer <CRON_SECRET>` podle dokumentace Vercel Cron Jobs.
+
 ## Databázové tabulky
 
 `companies`, `profiles`, `company_users`, `categories`, `projects`, `business_partners`,

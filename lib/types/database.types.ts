@@ -334,6 +334,8 @@ export type Database = {
           doc_type: Database["public"]["Enums"]["document_type"]
           document_number: string | null
           due_date: string | null
+          external_id: string | null
+          external_source: string | null
           id: string
           is_archived: boolean
           is_demo: boolean
@@ -364,6 +366,8 @@ export type Database = {
           doc_type?: Database["public"]["Enums"]["document_type"]
           document_number?: string | null
           due_date?: string | null
+          external_id?: string | null
+          external_source?: string | null
           id?: string
           is_archived?: boolean
           is_demo?: boolean
@@ -394,6 +398,8 @@ export type Database = {
           doc_type?: Database["public"]["Enums"]["document_type"]
           document_number?: string | null
           due_date?: string | null
+          external_id?: string | null
+          external_source?: string | null
           id?: string
           is_archived?: boolean
           is_demo?: boolean
@@ -509,6 +515,23 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      import_padel_reservation: {
+        Args: {
+          p_amount: number
+          p_court_name: string | null
+          p_customer_name: string | null
+          p_end_time: string | null
+          p_paid_at: string | null
+          p_payment_method: string | null
+          p_reservation_date: string
+          p_reservation_id: string
+          p_secret: string
+          p_start_time: string | null
+          p_variable_symbol: string | null
+          p_venue_name: string | null
+        }
+        Returns: string
+      }
       user_company_role: {
         Args: { target_company_id: string }
         Returns: Database["public"]["Enums"]["user_role"]

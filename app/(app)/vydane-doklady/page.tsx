@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { DEFAULT_COMPANY_ID } from "@/lib/config";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { formatCurrency, formatDate, isOverdue } from "@/lib/utils/format";
+import { PadelImportPanel } from "@/components/dokumenty/padel-import-panel";
 
 export const dynamic = "force-dynamic";
 
@@ -31,6 +32,8 @@ export default async function VydaneDokladyPage() {
           + Nový doklad
         </Link>
       </div>
+
+      <PadelImportPanel />
 
       <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm">
         <table className="w-full text-sm">

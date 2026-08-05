@@ -9,6 +9,7 @@ import {
   extractDocumentDataFromFile,
   type ExtractedDocumentData,
 } from "@/lib/ai/extract-document";
+import { syncPadelReservations, type PadelSyncResult } from "@/lib/integrations/padel-sync";
 
 function num(v: FormDataEntryValue | null): number {
   if (!v) return 0;
@@ -370,4 +371,14 @@ export async function quickImportDocument(
   } finally {
     revalidatePath(direction === "prijaty" ? "/prijate-doklady" : "/vydane-doklady");
   }
+}
+
+export async function importPadelReservations(
+  dateFrom: string,
+  dateTo: string
+): Promise<PadelSyncResult> {
+  const result = await syncPadelReservations(dateFrom, dateTo);
+  revalidatePath("/vydane-doklady");
+  revalidatePath("/prehled");
+  return result;
 }
