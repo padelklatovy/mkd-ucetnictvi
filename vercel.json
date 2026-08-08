@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/sync-padel",
+      "schedule": "0 3 * * *"
+    }
+  ]
+}

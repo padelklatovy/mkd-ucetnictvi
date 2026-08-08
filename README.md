@@ -103,14 +103,11 @@ funkci `import_padel_reservation` v Supabase (SQL editor nebo nová migrace).
 **Ruční spuštění:** na stránce Vydané doklady je panel "Import zaplacených rezervací" - zvolíte
 období a kliknete Importovat.
 
-**Automatický denní běh (volitelné):** endpoint `app/api/cron/sync-padel/route.ts` stáhne
-"včerejší" rezervace. Ve výchozím stavu je vypnutý (bez `CRON_SECRET` vrací 401). Pro zapnutí:
-1. Nastavte `CRON_SECRET` na náhodný řetězec (v `.env.local` i ve Vercel Environment Variables).
-2. Do `vercel.json` v rootu projektu přidejte:
-   ```json
-   { "crons": [{ "path": "/api/cron/sync-padel", "schedule": "0 3 * * *" }] }
-   ```
-   Vercel pak sám posílá `Authorization: Bearer <CRON_SECRET>` podle dokumentace Vercel Cron Jobs.
+**Automatický denní běh:** zapnutý (`vercel.json` obsahuje cron na `/api/cron/sync-padel`,
+denně ve 3:00 UTC). Stahuje "včerejší" zaplacené rezervace i platby na místě (barový QR).
+`CRON_SECRET` **není potřeba nastavovat ručně** – Vercel ho od ledna 2026 sám automaticky
+vytváří a posílá při každém plánovaném spuštění. Bezplatný Hobby plán podporuje cron až 1×
+denně zdarma; víc by vyžadovalo placený Pro plán.
 
 **Rozlišení zdroje platby (jen Fio, dva toky):** sloupec `documents.revenue_source`:
 - `'fio'` – platba spárovaná s konkrétní rezervací (přes `import_padel_reservation` /
