@@ -118,11 +118,12 @@ denně zdarma; víc by vyžadovalo placený Pro plán.
 
 Žádná ČSOB - obě cesty jdou přes stejný Fio účet.
 
-**Měsíční export (`/exporty`):** přehled tržeb za pronájem kurtu za zvolený měsíc, rozdělený na
-"Fio - spárováno s rezervací" / "Fio VS 406 - na místě", se základem DPH, DPH 12 % a celkovou
-částkou. Lze stáhnout jako CSV (`/api/exports/padel-revenue?month=YYYY-MM`). Nespárované
-bankovní platby, uhrazené rezervace bez transakce a nejednoznačné případy k ruční kontrole
-**v tomto exportu zatím nejsou** - ta data žijí v rezervačním systému.
+**Kompletní měsíční export (`/exporty`):** teď obsahuje **příjmy i výdaje pohromadě** - přesně
+to, co potřebuje účetní místo syrového bankovního výpisu. Nahoře souhrnné dlaždice (příjmy,
+výdaje, rozdíl, DPH na výstupu/vstupu), pak samostatné sekce Příjmy (tržby za kurty podle
+zdroje platby) a Výdaje (přijaté doklady s kategorií a stavem). CSV export
+(`/api/exports/padel-revenue?month=YYYY-MM`) obsahuje obojí v jednom souboru se sloupcem
+"Typ" (Příjem/Výdaj) a mezisoučty za obě strany.
 
 **Nespárované platby a nepotvrzené rezervace (`/ke-kontrole`):** appka čte i funkci
 `get_review_items_export` v rezervačním systému (nespárované Fio transakce + rezervace, kde

@@ -11,9 +11,9 @@ const sourceLabels: Record<string, string> = {
 
 function monthRange(monthStr: string) {
   const [year, month] = monthStr.split("-").map(Number);
-  const from = new Date(Date.UTC(year, month - 1, 1));
-  const to = new Date(Date.UTC(year, month, 0));
-  return { from: from.toISOString().slice(0, 10), to: to.toISOString().slice(0, 10) };
+  const lastDay = new Date(year, month, 0).getDate();
+  const pad2 = (n: number) => String(n).padStart(2, "0");
+  return { from: `${year}-${pad2(month)}-01`, to: `${year}-${pad2(month)}-${pad2(lastDay)}` };
 }
 
 function csvEscape(value: string) {
@@ -29,34 +29,49 @@ export async function GET(request: Request) {
   const { from, to } = monthRange(monthStr);
 
   const supabase = await createClient();
-  const { data: docs, error } = await supabase
-    .from("documents")
-    .select("document_number,issue_date,revenue_source,variable_symbol,amount_excl_vat,vat_amount,amount_total,status")
-    .eq("company_id", DEFAULT_COMPANY_ID)
-    .eq("direction", "vydany")
-    .eq("is_archived", false)
-    .eq("external_source", "padel-kalendar")
-    .gte("issue_date", from)
-    .lte("issue_date", to)
-    .order("issue_date");
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  const [{ data: revenueDocs, error: revenueError }, { data: expenseDocs, error: expenseError }] =
+    await Promise.all([
+      supabase
+        .from("documents")
+        .select("document_number,issue_date,revenue_source,variable_symbol,amount_excl_vat,vat_amount,amount_total,status")
+        .eq("company_id", DEFAULT_COMPANY_ID)
+        .eq("direction", "vydany")
+        .eq("is_archived", false)
+        .eq("external_source", "padel-kalendar")
+        .gte("issue_date", from)
+        .lte("issue_date", to)
+        .order("issue_date"),
+      supabase
+        .from("documents")
+        .select("document_number,issue_date,amount_excl_vat,vat_amount,amount_total,status,partner_ico,business_partners(name),categories(name)")
+        .eq("company_id", DEFAULT_COMPANY_ID)
+        .eq("direction", "prijaty")
+        .eq("is_archived", false)
+        .gte("issue_date", from)
+        .lte("issue_date", to)
+        .order("issue_date"),
+    ]);
+
+  if (revenueError || expenseError) {
+    return NextResponse.json({ error: (revenueError ?? expenseError)?.message }, { status: 500 });
   }
 
   const header = [
+    "Typ",
     "Datum",
     "Doklad",
-    "Zdroj platby",
-    "Variabilni symbol",
+    "Partner / zdroj platby",
+    "Kategorie / VS",
     "Zaklad DPH",
-    "DPH 12 procent",
+    "DPH",
     "Celkem s DPH",
     "Stav",
   ].join(";");
 
-  const rows = (docs ?? []).map((d) =>
+  const revenueRows = (revenueDocs ?? []).map((d) =>
     [
+      "Prijem",
       d.issue_date ?? "",
       d.document_number ?? "",
       d.revenue_source ? sourceLabels[d.revenue_source] ?? d.revenue_source : "",
@@ -70,20 +85,57 @@ export async function GET(request: Request) {
       .join(";")
   );
 
-  const totalExclVat = (docs ?? []).reduce((s, d) => s + Number(d.amount_excl_vat), 0);
-  const totalVat = (docs ?? []).reduce((s, d) => s + Number(d.vat_amount), 0);
-  const totalIncVat = (docs ?? []).reduce((s, d) => s + Number(d.amount_total), 0);
-  const totalRow = ["", "CELKEM", "", "", String(totalExclVat), String(totalVat), String(totalIncVat), ""].join(
-    ";"
-  );
+  const expenseRows = (expenseDocs ?? []).map((d) => {
+    const partnerName =
+      (d as unknown as { business_partners?: { name: string } | null }).business_partners?.name ??
+      d.partner_ico ??
+      "";
+    const categoryName =
+      (d as unknown as { categories?: { name: string } | null }).categories?.name ?? "";
+    return [
+      "Vydaj",
+      d.issue_date ?? "",
+      d.document_number ?? "",
+      partnerName,
+      categoryName,
+      String(d.amount_excl_vat),
+      String(d.vat_amount),
+      String(d.amount_total),
+      d.status,
+    ]
+      .map((v) => csvEscape(String(v)))
+      .join(";");
+  });
 
-  const csv = [header, ...rows, totalRow].join("\n");
+  const revenueTotalExclVat = (revenueDocs ?? []).reduce((s, d) => s + Number(d.amount_excl_vat), 0);
+  const revenueTotalVat = (revenueDocs ?? []).reduce((s, d) => s + Number(d.vat_amount), 0);
+  const revenueTotalIncVat = (revenueDocs ?? []).reduce((s, d) => s + Number(d.amount_total), 0);
+  const revenueTotalRow = [
+    "Prijem", "", "CELKEM PRIJMY", "", "",
+    String(revenueTotalExclVat), String(revenueTotalVat), String(revenueTotalIncVat), "",
+  ].join(";");
+
+  const expenseTotalExclVat = (expenseDocs ?? []).reduce((s, d) => s + Number(d.amount_excl_vat), 0);
+  const expenseTotalVat = (expenseDocs ?? []).reduce((s, d) => s + Number(d.vat_amount), 0);
+  const expenseTotalIncVat = (expenseDocs ?? []).reduce((s, d) => s + Number(d.amount_total), 0);
+  const expenseTotalRow = [
+    "Vydaj", "", "CELKEM VYDAJE", "", "",
+    String(expenseTotalExclVat), String(expenseTotalVat), String(expenseTotalIncVat), "",
+  ].join(";");
+
+  const csv = [
+    header,
+    ...revenueRows,
+    revenueTotalRow,
+    ...expenseRows,
+    expenseTotalRow,
+  ].join("\n");
   const bom = "\uFEFF"; // aby Excel spravne rozpoznal UTF-8 s ceskymi znaky
 
   return new NextResponse(bom + csv, {
     headers: {
       "Content-Type": "text/csv; charset=utf-8",
-      "Content-Disposition": `attachment; filename="trzby-kurty-${monthStr}.csv"`,
+      "Content-Disposition": `attachment; filename="podklady-ucetni-${monthStr}.csv"`,
     },
   });
 }
