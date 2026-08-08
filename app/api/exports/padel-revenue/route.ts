@@ -34,6 +34,7 @@ export async function GET(request: Request) {
     .select("document_number,issue_date,revenue_source,variable_symbol,amount_excl_vat,vat_amount,amount_total,status")
     .eq("company_id", DEFAULT_COMPANY_ID)
     .eq("direction", "vydany")
+    .eq("is_archived", false)
     .eq("external_source", "padel-kalendar")
     .gte("issue_date", from)
     .lte("issue_date", to)

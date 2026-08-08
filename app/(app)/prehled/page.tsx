@@ -57,12 +57,14 @@ export default async function PrehledPage({
       .from("documents")
       .select("direction,amount_total,vat_amount,issue_date,status,due_date,paid_date")
       .eq("company_id", companyId)
+      .eq("is_archived", false)
       .gte("issue_date", monthFromStr)
       .lte("issue_date", monthToStr),
     supabase
       .from("documents")
       .select("id,direction,document_number,customer_name,partner_id,amount_total,status,created_at,external_source,business_partners(name)")
       .eq("company_id", companyId)
+      .eq("is_archived", false)
       .gte("issue_date", monthFromStr)
       .lte("issue_date", monthToStr)
       .order("created_at", { ascending: false })
@@ -71,6 +73,7 @@ export default async function PrehledPage({
       .from("documents")
       .select("id", { count: "exact", head: true })
       .eq("company_id", companyId)
+      .eq("is_archived", false)
       .eq("direction", "vydany")
       .is("paid_date", null),
     supabase
@@ -82,6 +85,7 @@ export default async function PrehledPage({
       .from("documents")
       .select("id", { count: "exact", head: true })
       .eq("company_id", companyId)
+      .eq("is_archived", false)
       .is("paid_date", null)
       .in("status", ["novy", "ke_kontrole", "ceka_na_uhradu", "chybi_doklad"]),
     supabase
@@ -92,11 +96,13 @@ export default async function PrehledPage({
       .from("documents")
       .select("id", { count: "exact", head: true })
       .eq("company_id", companyId)
+      .eq("is_archived", false)
       .not("external_source", "is", null),
     supabase
       .from("documents")
       .select("id", { count: "exact", head: true })
       .eq("company_id", companyId)
+      .eq("is_archived", false)
       .not("external_source", "is", null)
       .gte("issue_date", monthFromStr)
       .lte("issue_date", monthToStr),
