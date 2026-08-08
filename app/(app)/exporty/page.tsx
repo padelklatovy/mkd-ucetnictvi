@@ -1,6 +1,8 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { DEFAULT_COMPANY_ID } from "@/lib/config";
 import { formatCurrency, formatDate } from "@/lib/utils/format";
+import { MonthSwitcher } from "@/components/dokumenty/month-switcher";
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +19,12 @@ function monthRange(monthStr: string) {
 
 function currentMonthStr() {
   const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function shiftMonth(monthStr: string, delta: number) {
+  const [year, month] = monthStr.split("-").map(Number);
+  const d = new Date(year, month - 1 + delta, 1);
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
 
@@ -80,23 +88,11 @@ export default async function ExportyPage({
         </a>
       </div>
 
-      <form className="mb-6 flex items-end gap-3" action="/exporty">
-        <label className="text-xs">
-          <span className="block text-slate-500 mb-1">Měsíc</span>
-          <input
-            type="month"
-            name="month"
-            defaultValue={monthStr}
-            className="rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-          />
-        </label>
-        <button
-          type="submit"
-          className="rounded-md border border-slate-300 bg-white px-4 py-1.5 text-sm text-slate-700 hover:bg-slate-50"
-        >
-          Zobrazit
-        </button>
-      </form>
+      <MonthSwitcher
+        monthStr={monthStr}
+        prevMonth={shiftMonth(monthStr, -1)}
+        nextMonth={shiftMonth(monthStr, 1)}
+      />
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <div className="rounded-lg border border-slate-200 bg-white p-4">
@@ -126,19 +122,16 @@ export default async function ExportyPage({
       {unknownDocs.length > 0 ? (
         <div className="mb-6 rounded-md border border-orange-200 bg-orange-50 px-4 py-3 text-sm text-orange-700">
           {unknownDocs.length} {unknownDocs.length === 1 ? "doklad" : "dokladů"} nemá rozpoznaný
-          zdroj platby (ani Fio, ani ČSOB VS 406) – zkontrolujte ručně, jde nejspíš o starší
-          import před zavedením rozlišení zdroje.
+          zdroj platby (ani Fio spárováno s rezervací, ani Fio VS 406 na místě) – zkontrolujte
+          ručně, jde nejspíš o starší import před zavedením rozlišení zdroje.
         </div>
       ) : null}
 
-      <div className="rounded-md border border-orange-200 bg-orange-50 px-4 py-3 text-sm text-orange-700 mb-6">
-        Bankovní platby nespárované s rezervací (a nemající VS 406), uhrazené rezervace bez
-        nalezené bankovní transakce a nejednoznačné transakce určené ke kontrole se sledují přímo
-        v rezervačním systému – tady zatím nejsou k dispozici. Až rezervační systém zpřístupní
-        tato data přes bezpečné API, doplníme je i sem.
-      </div>
-
-      <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm">
+      <div className="rounded-md border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-700 mb-6">
+        Nespárované bankovní platby a rezervace čekající na potvrzení platby teď najdete na
+        stránce <Link href="/ke-kontrole" className="underline font-medium">Ke kontrole</Link> –
+        appka je stahuje přímo z rezervačního systému.
+      </div>      <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm">
         <table className="w-full text-sm">
           <thead>
             <tr className="text-left text-xs text-slate-400 border-b border-slate-100">

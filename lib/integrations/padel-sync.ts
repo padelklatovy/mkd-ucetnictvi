@@ -199,3 +199,43 @@ export async function syncFioBarPayments(
 
   return result;
 }
+
+export type ReviewItem = {
+  kind: "nesparovana_platba" | "neplatba_potvrzena";
+  identifier: string;
+  occurred_on: string;
+  amount: number;
+  payer_or_customer: string | null;
+  variable_symbol: string | null;
+  note: string | null;
+};
+
+// Cte-only pohled na nesparovane Fio platby a rezervace, kde platba jeste
+// neni potvrzena/sparovana. Zadny import/zapis, jen zobrazeni pro appku.
+export async function fetchReviewItems(): Promise<ReviewItem[]> {
+  const url = process.env.PADEL_SUPABASE_URL;
+  const anonKey = process.env.PADEL_ANON_KEY;
+  const exportSecret = process.env.PADEL_EXPORT_SECRET;
+
+  if (!url || !anonKey || !exportSecret) {
+    throw new Error(
+      "Chybí PADEL_SUPABASE_URL, PADEL_ANON_KEY nebo PADEL_EXPORT_SECRET v prostředí serveru."
+    );
+  }
+
+  const res = await fetch(`${url}/rest/v1/rpc/get_review_items_export`, {
+    method: "POST",
+    headers: {
+      apikey: anonKey,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ p_secret: exportSecret }),
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Rezervační systém odmítl požadavek (${res.status}): ${text.slice(0, 300)}`);
+  }
+
+  return res.json();
+}

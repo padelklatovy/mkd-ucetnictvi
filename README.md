@@ -127,6 +127,11 @@ období a kliknete Importovat.
 bankovní platby, uhrazené rezervace bez transakce a nejednoznačné případy k ruční kontrole
 **v tomto exportu zatím nejsou** - ta data žijí v rezervačním systému.
 
+**Nespárované platby a nepotvrzené rezervace (`/ke-kontrole`):** appka čte i funkci
+`get_review_items_export` v rezervačním systému (nespárované Fio transakce + rezervace, kde
+byla platba založena, ale zatím není potvrzená/spárovaná). Tahle funkce byla přidána přímo z
+téhle appky (čtecí, bez zásahu do rezervačního systému) - stejný bezpečný vzor jako ostatní dvě.
+
 ## Databázové tabulky
 
 `companies`, `profiles`, `company_users`, `categories`, `projects`, `business_partners`,
