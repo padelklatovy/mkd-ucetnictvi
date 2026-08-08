@@ -89,6 +89,7 @@ export default async function ExportyPage({
       </div>
 
       <MonthSwitcher
+        basePath="/exporty"
         monthStr={monthStr}
         prevMonth={shiftMonth(monthStr, -1)}
         nextMonth={shiftMonth(monthStr, 1)}

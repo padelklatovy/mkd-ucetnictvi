@@ -4,19 +4,56 @@ import { DEFAULT_COMPANY_ID } from "@/lib/config";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { formatCurrency, formatDate, isOverdue } from "@/lib/utils/format";
 import { PadelImportPanel } from "@/components/dokumenty/padel-import-panel";
+import { MonthSwitcher } from "@/components/dokumenty/month-switcher";
 
 export const dynamic = "force-dynamic";
 
-export default async function VydaneDokladyPage() {
+function pad2(n: number) {
+  return String(n).padStart(2, "0");
+}
+
+function currentMonthStr() {
+  const d = new Date();
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}`;
+}
+
+function shiftMonth(monthStr: string, delta: number) {
+  const [year, month] = monthStr.split("-").map(Number);
+  const d = new Date(year, month - 1 + delta, 1);
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}`;
+}
+
+function monthRange(monthStr: string) {
+  const [year, month] = monthStr.split("-").map(Number);
+  const lastDay = new Date(year, month, 0).getDate();
+  return { from: `${year}-${pad2(month)}-01`, to: `${year}-${pad2(month)}-${pad2(lastDay)}` };
+}
+
+export default async function VydaneDokladyPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ month?: string }>;
+}) {
+  const { month } = await searchParams;
+  const showAll = month === "all";
+  const monthStr = !showAll ? month || currentMonthStr() : "";
+
   const supabase = await createClient();
 
-  const { data: documents, error } = await supabase
+  let query = supabase
     .from("documents")
     .select("id,document_number,partner_ico,customer_name,issue_date,amount_total,due_date,paid_date,status,created_at,business_partners(name)")
     .eq("company_id", DEFAULT_COMPANY_ID)
     .eq("direction", "vydany")
     .eq("is_archived", false)
-    .order("created_at", { ascending: false });
+    .order("issue_date", { ascending: false });
+
+  if (!showAll) {
+    const { from, to } = monthRange(monthStr);
+    query = query.gte("issue_date", from).lte("issue_date", to);
+  }
+
+  const { data: documents, error } = await query;
 
   return (
     <div className="max-w-6xl">
@@ -34,6 +71,25 @@ export default async function VydaneDokladyPage() {
       </div>
 
       <PadelImportPanel />
+
+      <div className="flex items-center gap-3 mb-1">
+        {!showAll ? (
+          <MonthSwitcher
+            basePath="/vydane-doklady"
+            monthStr={monthStr}
+            prevMonth={shiftMonth(monthStr, -1)}
+            nextMonth={shiftMonth(monthStr, 1)}
+          />
+        ) : (
+          <div className="mb-6 text-sm text-slate-600">Zobrazeny všechny doklady</div>
+        )}
+        <Link
+          href={showAll ? `/vydane-doklady?month=${currentMonthStr()}` : "/vydane-doklady?month=all"}
+          className="mb-6 text-xs text-[#1e3a5f] hover:underline"
+        >
+          {showAll ? "Zpět na aktuální měsíc" : "Zobrazit vše"}
+        </Link>
+      </div>
 
       <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm">
         <table className="w-full text-sm">
@@ -73,7 +129,7 @@ export default async function VydaneDokladyPage() {
             {(!documents || documents.length === 0) && (
               <tr>
                 <td colSpan={5} className="px-4 py-8 text-center text-slate-400">
-                  {error ? `Chyba načtení: ${error.message}` : "Zatím žádné vydané doklady."}
+                  {error ? `Chyba načtení: ${error.message}` : "Za zvolené období žádné vydané doklady."}
                 </td>
               </tr>
             )}

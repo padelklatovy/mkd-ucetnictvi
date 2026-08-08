@@ -25,10 +25,12 @@ function labelFor(monthStr: string) {
 }
 
 export function MonthSwitcher({
+  basePath,
   monthStr,
   prevMonth,
   nextMonth,
 }: {
+  basePath: string;
   monthStr: string;
   prevMonth: string;
   nextMonth: string;
@@ -38,7 +40,7 @@ export function MonthSwitcher({
   return (
     <div className="mb-6 flex items-center gap-2">
       <Link
-        href={`/exporty?month=${prevMonth}`}
+        href={`${basePath}?month=${prevMonth}`}
         className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50"
         aria-label="Předchozí měsíc"
       >
@@ -47,7 +49,7 @@ export function MonthSwitcher({
 
       <select
         value={monthStr}
-        onChange={(e) => router.push(`/exporty?month=${e.target.value}`)}
+        onChange={(e) => router.push(`${basePath}?month=${e.target.value}`)}
         className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700"
       >
         {monthOptions().some((o) => o.value === monthStr) ? null : (
@@ -61,7 +63,7 @@ export function MonthSwitcher({
       </select>
 
       <Link
-        href={`/exporty?month=${nextMonth}`}
+        href={`${basePath}?month=${nextMonth}`}
         className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50"
         aria-label="Následující měsíc"
       >

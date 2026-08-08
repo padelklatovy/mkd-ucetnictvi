@@ -5,17 +5,43 @@ import { StatCard } from "@/components/ui/stat-card";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { formatCurrency, formatDate } from "@/lib/utils/format";
 import { directionLabels } from "@/lib/utils/labels";
+import { MonthSwitcher } from "@/components/dokumenty/month-switcher";
 
 export const dynamic = "force-dynamic";
 
-export default async function PrehledPage() {
+function pad2(n: number) {
+  return String(n).padStart(2, "0");
+}
+
+function currentMonthStr() {
+  const d = new Date();
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}`;
+}
+
+function shiftMonth(monthStr: string, delta: number) {
+  const [year, month] = monthStr.split("-").map(Number);
+  const d = new Date(year, month - 1 + delta, 1);
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}`;
+}
+
+function monthRange(monthStr: string) {
+  const [year, month] = monthStr.split("-").map(Number);
+  const lastDay = new Date(year, month, 0).getDate();
+  return { from: `${year}-${pad2(month)}-01`, to: `${year}-${pad2(month)}-${pad2(lastDay)}` };
+}
+
+export default async function PrehledPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ month?: string }>;
+}) {
+  const { month } = await searchParams;
+  const monthStr = month || currentMonthStr();
+  const { from: monthFromStr, to: monthToStr } = monthRange(monthStr);
+  const isCurrentMonth = monthStr === currentMonthStr();
+
   const supabase = await createClient();
   const companyId = DEFAULT_COMPANY_ID;
-
-  const startOfMonth = new Date();
-  startOfMonth.setDate(1);
-  startOfMonth.setHours(0, 0, 0, 0);
-  const startOfMonthStr = startOfMonth.toISOString().slice(0, 10);
 
   const [
     { data: documents },
@@ -31,11 +57,14 @@ export default async function PrehledPage() {
       .from("documents")
       .select("direction,amount_total,vat_amount,issue_date,status,due_date,paid_date")
       .eq("company_id", companyId)
-      .gte("issue_date", startOfMonthStr),
+      .gte("issue_date", monthFromStr)
+      .lte("issue_date", monthToStr),
     supabase
       .from("documents")
       .select("id,direction,document_number,customer_name,partner_id,amount_total,status,created_at,external_source,business_partners(name)")
       .eq("company_id", companyId)
+      .gte("issue_date", monthFromStr)
+      .lte("issue_date", monthToStr)
       .order("created_at", { ascending: false })
       .limit(6),
     supabase
@@ -69,7 +98,8 @@ export default async function PrehledPage() {
       .select("id", { count: "exact", head: true })
       .eq("company_id", companyId)
       .not("external_source", "is", null)
-      .gte("issue_date", startOfMonthStr),
+      .gte("issue_date", monthFromStr)
+      .lte("issue_date", monthToStr),
   ]);
 
   const matchedTxIds = new Set((confirmedMatches ?? []).map((m) => m.bank_transaction_id));
@@ -94,14 +124,19 @@ export default async function PrehledPage() {
 
   return (
     <div className="max-w-6xl">
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-4 flex items-center justify-between">
         <div>
           <h1 className="text-xl font-semibold text-slate-900">Přehled</h1>
-          <p className="text-sm text-slate-500 mt-0.5">
-            Aktuální měsíc · MKD Enterprise, s.r.o.
-          </p>
+          <p className="text-sm text-slate-500 mt-0.5">MKD Enterprise, s.r.o.</p>
         </div>
       </div>
+
+      <MonthSwitcher
+        basePath="/prehled"
+        monthStr={monthStr}
+        prevMonth={shiftMonth(monthStr, -1)}
+        nextMonth={shiftMonth(monthStr, 1)}
+      />
 
       <div className="mb-6 rounded-lg border border-green-200 bg-green-50 px-5 py-4 flex items-center justify-between">
         <div>
@@ -112,8 +147,9 @@ export default async function PrehledPage() {
             {autoImportedCount ?? 0} dokladů celkem
           </div>
           <div className="text-xs text-green-700 mt-0.5">
-            z toho {autoImportedThisMonthCount ?? 0} tento měsíc – import z rezervačního systému
-            (Fio, spárováno s rezervací i platby na místě přes QR)
+            z toho {autoImportedThisMonthCount ?? 0}{" "}
+            {isCurrentMonth ? "tento měsíc" : "ve vybraném měsíci"} – import z rezervačního
+            systému (Fio, spárováno s rezervací i platby na místě přes QR)
           </div>
         </div>
         <Link

@@ -4,10 +4,14 @@ import { useState, useTransition } from "react";
 import { importPadelReservations, importFioBarPayments } from "@/app/(app)/prijate-doklady/actions";
 import type { PadelSyncResult } from "@/lib/integrations/padel-sync";
 
+function pad2(n: number) {
+  return String(n).padStart(2, "0");
+}
+
 function isoDaysAgo(days: number) {
   const d = new Date();
   d.setDate(d.getDate() - days);
-  return d.toISOString().slice(0, 10);
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
 }
 
 function monthOptions() {
@@ -27,9 +31,11 @@ function monthOptions() {
 
 function monthBounds(monthValue: string) {
   const [year, month] = monthValue.split("-").map(Number);
-  const from = new Date(year, month - 1, 1);
-  const to = new Date(year, month, 0);
-  return { from: from.toISOString().slice(0, 10), to: to.toISOString().slice(0, 10) };
+  const lastDay = new Date(year, month, 0).getDate(); // pocet dni v mesici, bez casoveho posunu
+  return {
+    from: `${year}-${pad2(month)}-01`,
+    to: `${year}-${pad2(month)}-${pad2(lastDay)}`,
+  };
 }
 
 export function PadelImportPanel() {
@@ -123,7 +129,8 @@ export function PadelImportPanel() {
           />
         </label>
         <span className="text-[11px] text-slate-400">
-          Opakované spuštění pro stejné období nic neduplikuje.
+          Opakované spuštění pro stejné období nic neduplikuje. Výběr měsíce jen nastaví
+          rozsah Od–Do, samotný import spustí až tlačítko níže.
         </span>
       </div>
 
