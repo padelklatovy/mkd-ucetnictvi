@@ -5,6 +5,7 @@ import { StatusBadge } from "@/components/ui/status-badge";
 import { formatCurrency, formatDate, isOverdue } from "@/lib/utils/format";
 import { PadelImportPanel } from "@/components/dokumenty/padel-import-panel";
 import { MonthSwitcher } from "@/components/dokumenty/month-switcher";
+import { DeleteDocumentButton } from "@/components/dokumenty/delete-document-button";
 
 export const dynamic = "force-dynamic";
 
@@ -100,6 +101,7 @@ export default async function VydaneDokladyPage({
               <th className="px-4 py-2.5 font-medium">Splatnost</th>
               <th className="px-4 py-2.5 font-medium text-right">Částka</th>
               <th className="px-4 py-2.5 font-medium">Stav</th>
+              <th className="px-4 py-2.5 font-medium"></th>
             </tr>
           </thead>
           <tbody>
@@ -123,12 +125,24 @@ export default async function VydaneDokladyPage({
                   <td className="px-4 py-2.5">
                     <StatusBadge status={doc.status} />
                   </td>
+                  <td className="px-4 py-2.5 text-right">
+                    <DeleteDocumentButton
+                      id={doc.id}
+                      direction="vydany"
+                      label={
+                        (doc as unknown as { business_partners?: { name: string } | null })
+                          .business_partners?.name ??
+                        doc.customer_name ??
+                        "doklad bez jména"
+                      }
+                    />
+                  </td>
                 </tr>
               );
             })}
             {(!documents || documents.length === 0) && (
               <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-slate-400">
+                <td colSpan={6} className="px-4 py-8 text-center text-slate-400">
                   {error ? `Chyba načtení: ${error.message}` : "Za zvolené období žádné vydané doklady."}
                 </td>
               </tr>

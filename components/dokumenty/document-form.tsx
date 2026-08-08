@@ -1,4 +1,5 @@
 import { saveDocument } from "@/app/(app)/prijate-doklady/actions";
+import { DeleteDocumentButton } from "@/components/dokumenty/delete-document-button";
 import type { Tables, Enums } from "@/lib/types/database.types";
 import {
   docTypeLabels,
@@ -266,13 +267,21 @@ export function DocumentForm({
         </div>
       ) : null}
 
-      <div className="flex gap-3">
+      <div className="flex gap-3 items-center">
         <button
           type="submit"
           className="rounded-md bg-[#1e3a5f] px-4 py-2 text-sm font-medium text-white hover:bg-[#14293f]"
         >
           Uložit doklad
         </button>
+        {document ? (
+          <DeleteDocumentButton
+            id={document.id}
+            direction={direction}
+            label={document.document_number ?? "tento doklad"}
+            redirectTo={direction === "prijaty" ? "/prijate-doklady" : "/vydane-doklady"}
+          />
+        ) : null}
       </div>
     </form>
   );

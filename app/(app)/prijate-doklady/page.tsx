@@ -4,6 +4,7 @@ import { DEFAULT_COMPANY_ID } from "@/lib/config";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { formatCurrency, formatDate, isOverdue } from "@/lib/utils/format";
 import type { Enums } from "@/lib/types/database.types";
+import { DeleteDocumentButton } from "@/components/dokumenty/delete-document-button";
 
 export const dynamic = "force-dynamic";
 
@@ -103,6 +104,7 @@ export default async function PrijateDokladyPage({
               <th className="px-4 py-2.5 font-medium">Splatnost</th>
               <th className="px-4 py-2.5 font-medium text-right">Částka</th>
               <th className="px-4 py-2.5 font-medium">Stav</th>
+              <th className="px-4 py-2.5 font-medium"></th>
             </tr>
           </thead>
           <tbody>
@@ -127,12 +129,19 @@ export default async function PrijateDokladyPage({
                   <td className="px-4 py-2.5">
                     <StatusBadge status={doc.status} />
                   </td>
+                  <td className="px-4 py-2.5 text-right">
+                    <DeleteDocumentButton
+                      id={doc.id}
+                      direction="prijaty"
+                      label={doc.document_number ?? "doklad bez čísla"}
+                    />
+                  </td>
                 </tr>
               );
             })}
             {(!documents || documents.length === 0) && (
               <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-slate-400">
+                <td colSpan={7} className="px-4 py-8 text-center text-slate-400">
                   {error ? `Chyba načtení: ${error.message}` : "Žádné doklady neodpovídají filtru."}
                 </td>
               </tr>
