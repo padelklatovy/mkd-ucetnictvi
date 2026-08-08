@@ -24,6 +24,8 @@ export default async function PrehledPage() {
     { data: confirmedMatches },
     { count: docsToCheckCount },
     { count: bankTxTotalCount },
+    { count: autoImportedCount },
+    { count: autoImportedThisMonthCount },
   ] = await Promise.all([
     supabase
       .from("documents")
@@ -32,7 +34,7 @@ export default async function PrehledPage() {
       .gte("issue_date", startOfMonthStr),
     supabase
       .from("documents")
-      .select("id,direction,document_number,partner_id,amount_total,status,created_at,business_partners(name)")
+      .select("id,direction,document_number,customer_name,partner_id,amount_total,status,created_at,external_source,business_partners(name)")
       .eq("company_id", companyId)
       .order("created_at", { ascending: false })
       .limit(6),
@@ -57,6 +59,17 @@ export default async function PrehledPage() {
       .from("bank_transactions")
       .select("id", { count: "exact", head: true })
       .eq("company_id", companyId),
+    supabase
+      .from("documents")
+      .select("id", { count: "exact", head: true })
+      .eq("company_id", companyId)
+      .not("external_source", "is", null),
+    supabase
+      .from("documents")
+      .select("id", { count: "exact", head: true })
+      .eq("company_id", companyId)
+      .not("external_source", "is", null)
+      .gte("issue_date", startOfMonthStr),
   ]);
 
   const matchedTxIds = new Set((confirmedMatches ?? []).map((m) => m.bank_transaction_id));
@@ -88,6 +101,27 @@ export default async function PrehledPage() {
             Aktuální měsíc · MKD Enterprise, s.r.o.
           </p>
         </div>
+      </div>
+
+      <div className="mb-6 rounded-lg border border-green-200 bg-green-50 px-5 py-4 flex items-center justify-between">
+        <div>
+          <div className="text-xs font-semibold text-green-700 uppercase tracking-wide">
+            Automaticky zpracováno bez ručního zásahu
+          </div>
+          <div className="text-2xl font-semibold text-green-800 mt-1">
+            {autoImportedCount ?? 0} dokladů celkem
+          </div>
+          <div className="text-xs text-green-700 mt-0.5">
+            z toho {autoImportedThisMonthCount ?? 0} tento měsíc – import z rezervačního systému
+            (Fio, spárováno s rezervací i platby na místě přes QR)
+          </div>
+        </div>
+        <Link
+          href="/exporty"
+          className="rounded-md bg-green-700 px-4 py-2 text-xs font-medium text-white hover:bg-green-800 shrink-0"
+        >
+          Zobrazit přehled tržeb
+        </Link>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
@@ -136,10 +170,10 @@ export default async function PrehledPage() {
           <thead>
             <tr className="text-left text-xs text-slate-400 border-b border-slate-100">
               <th className="px-5 py-2 font-medium">Typ</th>
-              <th className="px-5 py-2 font-medium">Č. dokladu</th>
-              <th className="px-5 py-2 font-medium">Partner</th>
+              <th className="px-5 py-2 font-medium">Partner / zákazník</th>
               <th className="px-5 py-2 font-medium">Částka</th>
               <th className="px-5 py-2 font-medium">Stav</th>
+              <th className="px-5 py-2 font-medium">Zdroj</th>
               <th className="px-5 py-2 font-medium">Přidáno</th>
             </tr>
           </thead>
@@ -147,14 +181,22 @@ export default async function PrehledPage() {
             {(recentDocuments ?? []).map((doc) => (
               <tr key={doc.id} className="border-b border-slate-50 last:border-0">
                 <td className="px-5 py-2.5">{directionLabels[doc.direction]}</td>
-                <td className="px-5 py-2.5">{doc.document_number ?? "—"}</td>
                 <td className="px-5 py-2.5">
                   {(doc as unknown as { business_partners?: { name: string } | null })
-                    .business_partners?.name ?? "—"}
+                    .business_partners?.name ?? doc.customer_name ?? "—"}
                 </td>
                 <td className="px-5 py-2.5">{formatCurrency(Number(doc.amount_total))}</td>
                 <td className="px-5 py-2.5">
                   <StatusBadge status={doc.status} />
+                </td>
+                <td className="px-5 py-2.5">
+                  {doc.external_source ? (
+                    <span className="inline-flex items-center rounded-full border border-green-300 bg-green-50 px-2 py-0.5 text-[11px] font-medium text-green-700">
+                      Auto import
+                    </span>
+                  ) : (
+                    <span className="text-xs text-slate-400">Ruční zadání</span>
+                  )}
                 </td>
                 <td className="px-5 py-2.5 text-slate-400">{formatDate(doc.created_at)}</td>
               </tr>

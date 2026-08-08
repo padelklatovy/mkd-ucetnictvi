@@ -15,11 +15,9 @@ type PadelReservationRow = {
 };
 
 // Bez vazby na rezervaci - platba pres staly barovy QR kod (VS 406), identita je
-// fio_transaction_id. Nazev/tvar teto RPC funkce na strane rezervacniho systemu
-// (get_bar_payments_export) je navrzeny kontrakt - jakmile tam bude hotovy,
-// staci upravit nazev funkce nize, pokud se bude jmenovat jinak.
+// transaction_id. Zdroj: get_onsite_bar_payments_export na strane rezervacniho systemu.
 type FioBarPaymentRow = {
-  fio_transaction_id: string;
+  transaction_id: string;
   transaction_date: string;
   amount: number;
   payer_name: string | null;
@@ -88,7 +86,7 @@ async function fetchFioBarPayments(
     );
   }
 
-  const res = await fetch(`${url}/rest/v1/rpc/get_bar_payments_export`, {
+  const res = await fetch(`${url}/rest/v1/rpc/get_onsite_bar_payments_export`, {
     method: "POST",
     headers: {
       apikey: anonKey,
@@ -182,7 +180,7 @@ export async function syncFioBarPayments(
     }
 
     const { error } = await supabase.rpc("import_fio_bar_payment", {
-      p_fio_transaction_id: row.fio_transaction_id,
+      p_fio_transaction_id: row.transaction_id,
       p_transaction_date: row.transaction_date,
       p_amount: row.amount,
       p_payer_name: row.payer_name,
@@ -193,7 +191,7 @@ export async function syncFioBarPayments(
     });
 
     if (error) {
-      result.errors.push({ reservationId: row.fio_transaction_id, message: error.message });
+      result.errors.push({ reservationId: row.transaction_id, message: error.message });
     } else {
       result.imported += 1;
     }
