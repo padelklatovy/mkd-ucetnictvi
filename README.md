@@ -130,6 +130,22 @@ zdroje platby) a Výdaje (přijaté doklady s kategorií a stavem). CSV export
 byla platba založena, ale zatím není potvrzená/spárovaná). Tahle funkce byla přidána přímo z
 téhle appky (čtecí, bez zásahu do rezervačního systému) - stejný bezpečný vzor jako ostatní dvě.
 
+## Kompletní sada pro účetní
+
+**Banka (`/banka`):** import výpisu z ČSOB **přímo jako PDF** (tak, jak ho ČSOB reálně posílá)
+nebo jako CSV export z internetbankingu - appka pozná formát podle přípony/typu souboru.
+PDF parser rekonstruuje rozvržení sloupců podle pozic textu na stránce (čistý JavaScript přes
+`pdfjs-dist`, žádná závislost na systémových nástrojích jako poppler - funguje i v serverless
+prostředí Vercelu). Ověřeno na reálném červencovém výpisu: 274/274 transakcí, přesná shoda se
+souhrnem na výpisu (počet i celková částka). CSV parser sám rozpoznává běžné sloupce (Datum,
+Objem/Částka, Protiúčet, Variabilní symbol, Zpráva pro příjemce) podle názvu hlavičky. Opakovaný
+import stejného souboru nic neduplikuje (hash řádku podle datum+částka+protiúčet+VS+zpráva).
+
+**Kompletní měsíční export (`/exporty`):** tři sekce pohromadě - Příjmy (tržby za kurty),
+Výdaje (přijaté doklady) a Bankovní pohyb ČSOB (nahraný výpis). CSV export
+(`/api/exports/padel-revenue?month=YYYY-MM`) obsahuje všechny tři se sloupcem "Typ" a
+mezisoučty - jeden soubor k odevzdání účetní místo tří různých zdrojů.
+
 ## Databázové tabulky
 
 `companies`, `profiles`, `company_users`, `categories`, `projects`, `business_partners`,

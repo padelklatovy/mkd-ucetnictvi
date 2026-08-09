@@ -30,31 +30,44 @@ export async function GET(request: Request) {
 
   const supabase = await createClient();
 
-  const [{ data: revenueDocs, error: revenueError }, { data: expenseDocs, error: expenseError }] =
-    await Promise.all([
-      supabase
-        .from("documents")
-        .select("document_number,issue_date,revenue_source,variable_symbol,amount_excl_vat,vat_amount,amount_total,status")
-        .eq("company_id", DEFAULT_COMPANY_ID)
-        .eq("direction", "vydany")
-        .eq("is_archived", false)
-        .eq("external_source", "padel-kalendar")
-        .gte("issue_date", from)
-        .lte("issue_date", to)
-        .order("issue_date"),
-      supabase
-        .from("documents")
-        .select("document_number,issue_date,amount_excl_vat,vat_amount,amount_total,status,partner_ico,business_partners(name),categories(name)")
-        .eq("company_id", DEFAULT_COMPANY_ID)
-        .eq("direction", "prijaty")
-        .eq("is_archived", false)
-        .gte("issue_date", from)
-        .lte("issue_date", to)
-        .order("issue_date"),
-    ]);
+  const [
+    { data: revenueDocs, error: revenueError },
+    { data: expenseDocs, error: expenseError },
+    { data: csobTx, error: csobError },
+  ] = await Promise.all([
+    supabase
+      .from("documents")
+      .select("document_number,issue_date,revenue_source,variable_symbol,amount_excl_vat,vat_amount,amount_total,status")
+      .eq("company_id", DEFAULT_COMPANY_ID)
+      .eq("direction", "vydany")
+      .eq("is_archived", false)
+      .eq("external_source", "padel-kalendar")
+      .gte("issue_date", from)
+      .lte("issue_date", to)
+      .order("issue_date"),
+    supabase
+      .from("documents")
+      .select("document_number,issue_date,amount_excl_vat,vat_amount,amount_total,status,partner_ico,business_partners(name),categories(name)")
+      .eq("company_id", DEFAULT_COMPANY_ID)
+      .eq("direction", "prijaty")
+      .eq("is_archived", false)
+      .gte("issue_date", from)
+      .lte("issue_date", to)
+      .order("issue_date"),
+    supabase
+      .from("bank_transactions")
+      .select("transaction_date,direction,amount,currency,counterparty_name,variable_symbol,message_for_recipient")
+      .eq("company_id", DEFAULT_COMPANY_ID)
+      .gte("transaction_date", from)
+      .lte("transaction_date", to)
+      .order("transaction_date"),
+  ]);
 
-  if (revenueError || expenseError) {
-    return NextResponse.json({ error: (revenueError ?? expenseError)?.message }, { status: 500 });
+  if (revenueError || expenseError || csobError) {
+    return NextResponse.json(
+      { error: (revenueError ?? expenseError ?? csobError)?.message },
+      { status: 500 }
+    );
   }
 
   const header = [
@@ -123,12 +136,30 @@ export async function GET(request: Request) {
     String(expenseTotalExclVat), String(expenseTotalVat), String(expenseTotalIncVat), "",
   ].join(";");
 
+  const csobRows = (csobTx ?? []).map((tx) => {
+    const signedAmount = tx.direction === "odchozi" ? -Number(tx.amount) : Number(tx.amount);
+    return [
+      "CSOB vypis",
+      tx.transaction_date ?? "",
+      "",
+      tx.counterparty_name ?? "",
+      tx.variable_symbol ?? "",
+      "",
+      "",
+      String(signedAmount),
+      "",
+    ]
+      .map((v) => csvEscape(String(v)))
+      .join(";");
+  });
+
   const csv = [
     header,
     ...revenueRows,
     revenueTotalRow,
     ...expenseRows,
     expenseTotalRow,
+    ...csobRows,
   ].join("\n");
   const bom = "\uFEFF"; // aby Excel spravne rozpoznal UTF-8 s ceskymi znaky
 

@@ -45,28 +45,40 @@ export default async function ExportyPage({
 
   const supabase = await createClient();
 
-  const [{ data: revenueDocsRaw, error: revenueError }, { data: expenseDocsRaw, error: expenseError }] =
-    await Promise.all([
-      supabase
-        .from("documents")
-        .select("id,document_number,issue_date,amount_excl_vat,vat_amount,amount_total,revenue_source,variable_symbol,status,note")
-        .eq("company_id", DEFAULT_COMPANY_ID)
-        .eq("direction", "vydany")
-        .eq("is_archived", false)
-        .eq("external_source", "padel-kalendar")
-        .gte("issue_date", from)
-        .lte("issue_date", to)
-        .order("issue_date"),
-      supabase
-        .from("documents")
-        .select("id,document_number,issue_date,due_date,paid_date,amount_excl_vat,vat_amount,amount_total,status,note,partner_ico,categories(name),business_partners(name)")
-        .eq("company_id", DEFAULT_COMPANY_ID)
-        .eq("direction", "prijaty")
-        .eq("is_archived", false)
-        .gte("issue_date", from)
-        .lte("issue_date", to)
-        .order("issue_date"),
-    ]);
+  const [
+    { data: revenueDocsRaw, error: revenueError },
+    { data: expenseDocsRaw, error: expenseError },
+    { data: csobTxRaw, error: csobError },
+  ] = await Promise.all([
+    supabase
+      .from("documents")
+      .select("id,document_number,issue_date,amount_excl_vat,vat_amount,amount_total,revenue_source,variable_symbol,status,note")
+      .eq("company_id", DEFAULT_COMPANY_ID)
+      .eq("direction", "vydany")
+      .eq("is_archived", false)
+      .eq("external_source", "padel-kalendar")
+      .gte("issue_date", from)
+      .lte("issue_date", to)
+      .order("issue_date"),
+    supabase
+      .from("documents")
+      .select("id,document_number,issue_date,due_date,paid_date,amount_excl_vat,vat_amount,amount_total,status,note,partner_ico,categories(name),business_partners(name)")
+      .eq("company_id", DEFAULT_COMPANY_ID)
+      .eq("direction", "prijaty")
+      .eq("is_archived", false)
+      .gte("issue_date", from)
+      .lte("issue_date", to)
+      .order("issue_date"),
+    supabase
+      .from("bank_transactions")
+      .select("id,transaction_date,direction,amount,currency,counterparty_name,variable_symbol,message_for_recipient,bank_accounts(name)")
+      .eq("company_id", DEFAULT_COMPANY_ID)
+      .gte("transaction_date", from)
+      .lte("transaction_date", to)
+      .order("transaction_date"),
+  ]);
+
+  const csobTx = csobTxRaw ?? [];
 
   const revenueDocs = revenueDocsRaw ?? [];
   const expenseDocs = expenseDocsRaw ?? [];
@@ -285,6 +297,57 @@ export default async function ExportyPage({
               <tr>
                 <td colSpan={8} className="px-4 py-8 text-center text-slate-400">
                   {expenseError ? `Chyba načtení: ${expenseError.message}` : "Žádné přijaté doklady za zvolený měsíc."}
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* ČSOB VÝPIS */}
+      <h2 className="text-base font-semibold text-slate-800 mb-3 mt-10">
+        Bankovní pohyb – ČSOB (nahraný výpis)
+      </h2>
+      <p className="text-xs text-slate-500 mb-4">
+        Ruční CSV import z internetbankingu, viz stránka Banka. Slouží jako podklad pro účetní,
+        appka tyto transakce zatím automaticky nepáruje s doklady.
+      </p>
+      <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-left text-xs text-slate-400 border-b border-slate-100">
+              <th className="px-4 py-2.5 font-medium">Datum</th>
+              <th className="px-4 py-2.5 font-medium">Protistrana</th>
+              <th className="px-4 py-2.5 font-medium">VS</th>
+              <th className="px-4 py-2.5 font-medium">Zpráva</th>
+              <th className="px-4 py-2.5 font-medium text-right">Částka</th>
+            </tr>
+          </thead>
+          <tbody>
+            {csobTx.map((tx) => (
+              <tr key={tx.id} className="border-b border-slate-50 last:border-0">
+                <td className="px-4 py-2">{formatDate(tx.transaction_date)}</td>
+                <td className="px-4 py-2">{tx.counterparty_name ?? "—"}</td>
+                <td className="px-4 py-2 text-slate-500">{tx.variable_symbol ?? "—"}</td>
+                <td className="px-4 py-2 text-xs text-slate-400 max-w-xs truncate">
+                  {tx.message_for_recipient ?? "—"}
+                </td>
+                <td
+                  className={`px-4 py-2 text-right font-medium ${
+                    tx.direction === "prichozi" ? "text-green-600" : "text-orange-600"
+                  }`}
+                >
+                  {tx.direction === "odchozi" ? "-" : "+"}
+                  {formatCurrency(Number(tx.amount), tx.currency)}
+                </td>
+              </tr>
+            ))}
+            {csobTx.length === 0 && (
+              <tr>
+                <td colSpan={5} className="px-4 py-8 text-center text-slate-400">
+                  {csobError
+                    ? `Chyba načtení: ${csobError.message}`
+                    : "Žádný nahraný výpis za zvolený měsíc – nahrajte ho na stránce Banka."}
                 </td>
               </tr>
             )}

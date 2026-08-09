@@ -8,6 +8,7 @@ const navItems = [
   { href: "/prehled", label: "Přehled", icon: "📊" },
   { href: "/prijate-doklady", label: "Přijaté doklady", icon: "📥" },
   { href: "/vydane-doklady", label: "Vydané doklady", icon: "📤" },
+  { href: "/banka", label: "Banka", icon: "🏦" },
   { href: "/ke-kontrole", label: "Ke kontrole", icon: "⚠️" },
   { href: "/exporty", label: "Exporty", icon: "📁" },
   { href: "/nastaveni", label: "Nastavení", icon: "⚙️" },
