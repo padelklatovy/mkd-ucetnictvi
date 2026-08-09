@@ -43,7 +43,7 @@ export default async function VydaneDokladyPage({
 
   let query = supabase
     .from("documents")
-    .select("id,document_number,partner_ico,customer_name,issue_date,amount_total,due_date,paid_date,status,created_at,business_partners(name)")
+    .select("id,document_number,partner_ico,customer_name,issue_date,amount_total,due_date,paid_date,status,revenue_source,created_at,business_partners(name)")
     .eq("company_id", DEFAULT_COMPANY_ID)
     .eq("direction", "vydany")
     .eq("is_archived", false)
@@ -98,6 +98,7 @@ export default async function VydaneDokladyPage({
             <tr className="text-left text-xs text-slate-400 border-b border-slate-100">
               <th className="px-4 py-2.5 font-medium">Odběratel</th>
               <th className="px-4 py-2.5 font-medium">Vystaveno</th>
+              <th className="px-4 py-2.5 font-medium">Zdroj</th>
               <th className="px-4 py-2.5 font-medium">Splatnost</th>
               <th className="px-4 py-2.5 font-medium text-right">Částka</th>
               <th className="px-4 py-2.5 font-medium">Stav</th>
@@ -118,6 +119,19 @@ export default async function VydaneDokladyPage({
                     </Link>
                   </td>
                   <td className="px-4 py-2.5 text-slate-500">{formatDate(doc.issue_date)}</td>
+                  <td className="px-4 py-2.5">
+                    {doc.revenue_source === "fio" ? (
+                      <span className="inline-flex items-center rounded-full border border-blue-300 bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-700">
+                        Rezervace
+                      </span>
+                    ) : doc.revenue_source === "fio_vs406" ? (
+                      <span className="inline-flex items-center rounded-full border border-purple-300 bg-purple-50 px-2 py-0.5 text-[11px] font-medium text-purple-700">
+                        Na místě (VS 406)
+                      </span>
+                    ) : (
+                      <span className="text-xs text-slate-400">Ruční</span>
+                    )}
+                  </td>
                   <td className={`px-4 py-2.5 ${overdue ? "text-red-600 font-medium" : ""}`}>
                     {formatDate(doc.due_date)}
                   </td>
@@ -142,7 +156,7 @@ export default async function VydaneDokladyPage({
             })}
             {(!documents || documents.length === 0) && (
               <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-slate-400">
+                <td colSpan={7} className="px-4 py-8 text-center text-slate-400">
                   {error ? `Chyba načtení: ${error.message}` : "Za zvolené období žádné vydané doklady."}
                 </td>
               </tr>
