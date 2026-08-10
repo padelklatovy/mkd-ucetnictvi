@@ -1,12 +1,32 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import QRCode from "qrcode";
+import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { formatCurrency, formatDate } from "@/lib/utils/format";
 import { calcLineTotal, generateSpdPayload, type InvoiceLineItem } from "@/lib/utils/invoice";
 import { PrintButton } from "@/components/dokumenty/print-button";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const supabase = await createClient();
+  const { data: document } = await supabase
+    .from("documents")
+    .select("document_number,customer_name")
+    .eq("id", id)
+    .single();
+
+  if (!document) return { title: "Faktura" };
+
+  const number = document.document_number ?? "bez čísla";
+  return { title: `Faktura ${number} - MKD Enterprise` };
+}
 
 export default async function FakturaPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -75,7 +95,7 @@ export default async function FakturaPage({ params }: { params: Promise<{ id: st
         <div className="flex justify-between items-start mb-8">
           <div>
             <h1 className="text-2xl font-semibold text-[#1e3a5f]">Faktura {document.document_number}</h1>
-            <p className="text-sm text-slate-500 mt-1">
+            <p className="text-sm text-slate-600 mt-1">
               {document.status === "zaplaceny" ? "UHRAZENO" : "NEUHRAZENO"}
             </p>
           </div>
@@ -83,14 +103,14 @@ export default async function FakturaPage({ params }: { params: Promise<{ id: st
             <div className="text-center">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={qrDataUrl} alt="QR platba" width={110} height={110} />
-              <div className="text-[10px] text-slate-400 mt-1">Zaplatit QR kódem</div>
+              <div className="text-[10px] text-slate-600 mt-1">Zaplatit QR kódem</div>
             </div>
           ) : null}
         </div>
 
         <div className="grid grid-cols-2 gap-8 mb-8 text-sm">
           <div>
-            <div className="text-xs font-semibold text-slate-400 uppercase mb-1">Dodavatel</div>
+            <div className="text-xs font-semibold text-slate-600 uppercase mb-1">Dodavatel</div>
             <div className="font-medium text-slate-800">{company.name}</div>
             <div className="text-slate-600 whitespace-pre-line">{company.address}</div>
             <div className="text-slate-600 mt-1">
@@ -103,7 +123,7 @@ export default async function FakturaPage({ params }: { params: Promise<{ id: st
             ) : null}
           </div>
           <div>
-            <div className="text-xs font-semibold text-slate-400 uppercase mb-1">Odběratel</div>
+            <div className="text-xs font-semibold text-slate-600 uppercase mb-1">Odběratel</div>
             <div className="font-medium text-slate-800">{document.customer_name ?? "—"}</div>
             <div className="text-slate-600 whitespace-pre-line">{document.customer_address}</div>
             {document.partner_ico ? (
@@ -117,26 +137,26 @@ export default async function FakturaPage({ params }: { params: Promise<{ id: st
 
         <div className="grid grid-cols-4 gap-4 mb-8 text-sm border-t border-b border-slate-100 py-3">
           <div>
-            <div className="text-xs text-slate-400">Vystaveno</div>
+            <div className="text-xs text-slate-600">Vystaveno</div>
             <div>{formatDate(document.issue_date)}</div>
           </div>
           <div>
-            <div className="text-xs text-slate-400">DUZP</div>
+            <div className="text-xs text-slate-600">DUZP</div>
             <div>{formatDate(document.taxable_supply_date)}</div>
           </div>
           <div>
-            <div className="text-xs text-slate-400">Splatnost</div>
+            <div className="text-xs text-slate-600">Splatnost</div>
             <div>{formatDate(document.due_date)}</div>
           </div>
           <div>
-            <div className="text-xs text-slate-400">Variabilní symbol</div>
+            <div className="text-xs text-slate-600">Variabilní symbol</div>
             <div>{document.variable_symbol ?? "—"}</div>
           </div>
         </div>
 
         <table className="w-full text-sm mb-6">
           <thead>
-            <tr className="text-left text-xs text-slate-400 border-b border-slate-200">
+            <tr className="text-left text-xs text-slate-600 border-b border-slate-200">
               <th className="py-2 pr-2">#</th>
               <th className="py-2 px-2">Popis</th>
               <th className="py-2 px-2 text-right">Množ.</th>
@@ -192,9 +212,9 @@ export default async function FakturaPage({ params }: { params: Promise<{ id: st
           </div>
         </div>
 
-        {document.note ? <p className="text-xs text-slate-500 mb-6">{document.note}</p> : null}
+        {document.note ? <p className="text-xs text-slate-600 mb-6">{document.note}</p> : null}
 
-        <div className="text-[11px] text-slate-400 border-t border-slate-100 pt-4">
+        <div className="text-[11px] text-slate-600 border-t border-slate-100 pt-4">
           {company.regnote || `${company.name} · IČO ${company.ico} · DIČ ${company.dic ?? ""}`}
         </div>
       </div>
