@@ -137,14 +137,14 @@ export default async function FakturaPage({ params }: { params: Promise<{ id: st
         <table className="w-full text-sm mb-6">
           <thead>
             <tr className="text-left text-xs text-slate-400 border-b border-slate-200">
-              <th className="py-2">#</th>
-              <th className="py-2">Popis</th>
-              <th className="py-2 text-right">Množ.</th>
-              <th className="py-2 text-right">Cena/j.</th>
-              <th className="py-2 text-right">Základ</th>
-              <th className="py-2 text-right">DPH %</th>
-              <th className="py-2 text-right">DPH</th>
-              <th className="py-2 text-right">Celkem</th>
+              <th className="py-2 pr-2">#</th>
+              <th className="py-2 px-2">Popis</th>
+              <th className="py-2 px-2 text-right">Množ.</th>
+              <th className="py-2 px-2 text-right">Cena/j.</th>
+              <th className="py-2 px-2 text-right">Základ</th>
+              <th className="py-2 px-2 text-right">DPH %</th>
+              <th className="py-2 px-2 text-right">DPH</th>
+              <th className="py-2 pl-2 text-right">Celkem</th>
             </tr>
           </thead>
           <tbody>
@@ -152,14 +152,14 @@ export default async function FakturaPage({ params }: { params: Promise<{ id: st
               const t = calcLineTotal(it);
               return (
                 <tr key={idx} className="border-b border-slate-50">
-                  <td className="py-2">{idx + 1}</td>
-                  <td className="py-2">{it.description || "—"}</td>
-                  <td className="py-2 text-right">{it.quantity}</td>
-                  <td className="py-2 text-right">{formatCurrency(it.unitPrice)}</td>
-                  <td className="py-2 text-right">{formatCurrency(t.base)}</td>
-                  <td className="py-2 text-right">{it.vatRatePercent}</td>
-                  <td className="py-2 text-right">{formatCurrency(t.vat)}</td>
-                  <td className="py-2 text-right">{formatCurrency(t.total)}</td>
+                  <td className="py-2 pr-2">{idx + 1}</td>
+                  <td className="py-2 px-2">{it.description || "—"}</td>
+                  <td className="py-2 px-2 text-right">{it.quantity}</td>
+                  <td className="py-2 px-2 text-right">{formatCurrency(it.unitPrice)}</td>
+                  <td className="py-2 px-2 text-right">{formatCurrency(t.base)}</td>
+                  <td className="py-2 px-2 text-right">{it.vatRatePercent}</td>
+                  <td className="py-2 px-2 text-right">{formatCurrency(t.vat)}</td>
+                  <td className="py-2 pl-2 text-right">{formatCurrency(t.total)}</td>
                 </tr>
               );
             })}

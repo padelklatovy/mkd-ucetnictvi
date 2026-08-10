@@ -273,8 +273,12 @@ export function InvoiceForm({
                       <input
                         type="number"
                         step="0.01"
-                        value={it.quantity}
-                        onChange={(e) => updateItem(idx, { quantity: Number(e.target.value) })}
+                        value={it.quantity === 0 ? "" : it.quantity}
+                        onChange={(e) =>
+                          updateItem(idx, {
+                            quantity: e.target.value === "" ? 0 : Number(e.target.value),
+                          })
+                        }
                         className={inputClass}
                       />
                     </td>
@@ -289,8 +293,13 @@ export function InvoiceForm({
                       <input
                         type="number"
                         step="0.01"
-                        value={it.unitPrice}
-                        onChange={(e) => updateItem(idx, { unitPrice: Number(e.target.value) })}
+                        value={it.unitPrice === 0 ? "" : it.unitPrice}
+                        onChange={(e) =>
+                          updateItem(idx, {
+                            unitPrice: e.target.value === "" ? 0 : Number(e.target.value),
+                          })
+                        }
+                        placeholder="0"
                         className={inputClass}
                       />
                     </td>
