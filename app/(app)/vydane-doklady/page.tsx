@@ -61,7 +61,9 @@ export default async function VydaneDokladyPage({
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-xl font-semibold text-slate-900">Vydané doklady</h1>
-          <p className="text-sm text-slate-500 mt-0.5">Evidence a sledování úhrady vydaných faktur</p>
+          <p className="text-sm text-slate-500 mt-0.5">
+            Faktury vystavené zákazníkům – vaše <span className="font-medium text-green-600">tržby</span> (peníze jdou dovnitř)
+          </p>
         </div>
         <Link
           href="/vydane-doklady/novy"

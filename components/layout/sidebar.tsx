@@ -7,8 +7,8 @@ import { signOut } from "@/app/auth/actions";
 
 const navItems = [
   { href: "/prehled", label: "Přehled", icon: "📊" },
-  { href: "/prijate-doklady", label: "Přijaté doklady", icon: "📥" },
-  { href: "/vydane-doklady", label: "Vydané doklady", icon: "📤" },
+  { href: "/prijate-doklady", label: "Přijaté doklady", sub: "od dodavatelů – náklady", icon: "📥" },
+  { href: "/vydane-doklady", label: "Vydané doklady", sub: "zákazníkům – tržby", icon: "📤" },
   { href: "/banka", label: "Banka", icon: "🏦" },
   { href: "/ke-kontrole", label: "Ke kontrole", icon: "⚠️" },
   { href: "/exporty", label: "Exporty", icon: "📁" },
@@ -45,7 +45,14 @@ function SidebarContent({
               }`}
             >
               <span aria-hidden>{item.icon}</span>
-              {item.label}
+              <span>
+                {item.label}
+                {item.sub ? (
+                  <span className="block text-[10px] font-normal text-white/50 leading-tight">
+                    {item.sub}
+                  </span>
+                ) : null}
+              </span>
             </Link>
           );
         })}

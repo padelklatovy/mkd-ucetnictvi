@@ -48,7 +48,9 @@ export default async function PrijateDokladyPage({
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-xl font-semibold text-slate-900">Přijaté doklady</h1>
-          <p className="text-sm text-slate-500 mt-0.5">Faktury a doklady od dodavatelů</p>
+          <p className="text-sm text-slate-500 mt-0.5">
+            Faktury a doklady od dodavatelů – vaše <span className="font-medium text-orange-600">náklady</span> (peníze jdou ven)
+          </p>
         </div>
         <div className="flex gap-2">
           <Link
