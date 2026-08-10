@@ -52,6 +52,10 @@ export default async function KeKontrolePage() {
           <h2 className="text-sm font-semibold text-slate-700">
             Vyžadují kontrolu ({(toReview ?? []).length})
           </h2>
+          <p className="text-xs text-slate-500 mt-1">
+            Otevřete doklad, zkontrolujte/opravte údaje (hlavně částku a DPH) a uložte – tím se
+            stav změní a doklad odsud sám zmizí.
+          </p>
         </div>
         <table className="w-full text-sm">
           <thead>
@@ -61,39 +65,42 @@ export default async function KeKontrolePage() {
               <th className="px-5 py-2 font-medium">Částka</th>
               <th className="px-5 py-2 font-medium">Stav</th>
               <th className="px-5 py-2 font-medium">Poznámka</th>
+              <th className="px-5 py-2 font-medium"></th>
             </tr>
           </thead>
           <tbody>
-            {(toReview ?? []).map((doc) => (
-              <tr key={doc.id} className="border-b border-slate-50 last:border-0 hover:bg-slate-50">
-                <td className="px-5 py-2.5">{directionLabels[doc.direction]}</td>
-                <td className="px-5 py-2.5">
-                  <Link
-                    href={
-                      doc.direction === "prijaty"
-                        ? `/prijate-doklady/${doc.id}`
-                        : `/vydane-doklady/${doc.id}`
-                    }
-                    className="text-[#1e3a5f] hover:underline"
-                  >
+            {(toReview ?? []).map((doc) => {
+              const href = doc.direction === "prijaty" ? `/prijate-doklady/${doc.id}` : `/vydane-doklady/${doc.id}`;
+              return (
+                <tr key={doc.id} className="border-b border-slate-50 last:border-0 hover:bg-slate-50">
+                  <td className="px-5 py-2.5">{directionLabels[doc.direction]}</td>
+                  <td className="px-5 py-2.5">
                     {(doc as unknown as { business_partners?: { name: string } | null })
                       .business_partners?.name ??
                       doc.customer_name ??
                       "(bez jména)"}
-                  </Link>
-                </td>
-                <td className="px-5 py-2.5">{formatCurrency(Number(doc.amount_total))}</td>
-                <td className="px-5 py-2.5">
-                  <StatusBadge status={doc.status} />
-                </td>
-                <td className="px-5 py-2.5 text-xs text-slate-400 max-w-sm truncate">
-                  {doc.note ?? "—"}
-                </td>
-              </tr>
-            ))}
+                  </td>
+                  <td className="px-5 py-2.5">{formatCurrency(Number(doc.amount_total))}</td>
+                  <td className="px-5 py-2.5">
+                    <StatusBadge status={doc.status} />
+                  </td>
+                  <td className="px-5 py-2.5 text-xs text-slate-400 max-w-sm truncate">
+                    {doc.note ?? "—"}
+                  </td>
+                  <td className="px-5 py-2.5 text-right">
+                    <Link
+                      href={href}
+                      className="inline-block rounded-md bg-[#1e3a5f] px-3 py-1 text-xs font-medium text-white hover:bg-[#14293f]"
+                    >
+                      Otevřít doklad →
+                    </Link>
+                  </td>
+                </tr>
+              );
+            })}
             {(!toReview || toReview.length === 0) && (
               <tr>
-                <td colSpan={5} className="px-5 py-6 text-center text-slate-400">
+                <td colSpan={6} className="px-5 py-6 text-center text-slate-400">
                   Nic ke kontrole – všechny doklady jsou v pořádku.
                 </td>
               </tr>
@@ -102,9 +109,13 @@ export default async function KeKontrolePage() {
         </table>
       </div>
 
-      <div className="rounded-lg border border-slate-200 bg-white shadow-sm">
+      <div className="mb-6 rounded-lg border border-slate-200 bg-white shadow-sm">
         <div className="border-b border-slate-100 px-5 py-3">
           <h2 className="text-sm font-semibold text-slate-700">Po splatnosti ({overdue.length})</h2>
+          <p className="text-xs text-slate-500 mt-1">
+            Ověřte, jestli platba mezitím nedorazila (a doplňte datum úhrady v dokladu), nebo
+            kontaktujte dodavatele/zákazníka.
+          </p>
         </div>
         <table className="w-full text-sm">
           <thead>
@@ -113,34 +124,37 @@ export default async function KeKontrolePage() {
               <th className="px-5 py-2 font-medium">Partner / zákazník</th>
               <th className="px-5 py-2 font-medium">Splatnost</th>
               <th className="px-5 py-2 font-medium">Částka</th>
+              <th className="px-5 py-2 font-medium"></th>
             </tr>
           </thead>
           <tbody>
-            {overdue.map((doc) => (
-              <tr key={doc.id} className="border-b border-slate-50 last:border-0 hover:bg-slate-50">
-                <td className="px-5 py-2.5">{directionLabels[doc.direction]}</td>
-                <td className="px-5 py-2.5">
-                  <Link
-                    href={
-                      doc.direction === "prijaty"
-                        ? `/prijate-doklady/${doc.id}`
-                        : `/vydane-doklady/${doc.id}`
-                    }
-                    className="text-[#1e3a5f] hover:underline"
-                  >
+            {overdue.map((doc) => {
+              const href = doc.direction === "prijaty" ? `/prijate-doklady/${doc.id}` : `/vydane-doklady/${doc.id}`;
+              return (
+                <tr key={doc.id} className="border-b border-slate-50 last:border-0 hover:bg-slate-50">
+                  <td className="px-5 py-2.5">{directionLabels[doc.direction]}</td>
+                  <td className="px-5 py-2.5">
                     {(doc as unknown as { business_partners?: { name: string } | null })
                       .business_partners?.name ??
                       doc.customer_name ??
                       "(bez jména)"}
-                  </Link>
-                </td>
-                <td className="px-5 py-2.5 text-red-600 font-medium">{formatDate(doc.due_date)}</td>
-                <td className="px-5 py-2.5">{formatCurrency(Number(doc.amount_total))}</td>
-              </tr>
-            ))}
+                  </td>
+                  <td className="px-5 py-2.5 text-red-600 font-medium">{formatDate(doc.due_date)}</td>
+                  <td className="px-5 py-2.5">{formatCurrency(Number(doc.amount_total))}</td>
+                  <td className="px-5 py-2.5 text-right">
+                    <Link
+                      href={href}
+                      className="inline-block rounded-md bg-[#1e3a5f] px-3 py-1 text-xs font-medium text-white hover:bg-[#14293f]"
+                    >
+                      Otevřít doklad →
+                    </Link>
+                  </td>
+                </tr>
+              );
+            })}
             {overdue.length === 0 && (
               <tr>
-                <td colSpan={4} className="px-5 py-6 text-center text-slate-400">
+                <td colSpan={5} className="px-5 py-6 text-center text-slate-400">
                   Žádné doklady po splatnosti.
                 </td>
               </tr>
@@ -154,6 +168,10 @@ export default async function KeKontrolePage() {
           <h2 className="text-sm font-semibold text-slate-700">
             Z rezervačního systému ({reviewItems.length})
           </h2>
+          <p className="text-xs text-slate-500 mt-1">
+            Tyhle položky se řeší přímo v rezervačním systému (admin rozhraní Padel Klatovy) –
+            appka je odsud jen zobrazuje pro přehled, nejde je odsud opravit ani potvrdit.
+          </p>
         </div>
         <table className="w-full text-sm">
           <thead>
