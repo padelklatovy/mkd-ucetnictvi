@@ -10,6 +10,10 @@ import {
   type ExtractedDocumentData,
 } from "@/lib/ai/extract-document";
 import { syncPadelReservations, syncFioBarPayments, type PadelSyncResult } from "@/lib/integrations/padel-sync";
+import {
+  checkAmountConsistency,
+  findPossibleDuplicate,
+} from "@/lib/utils/document-quality-checks";
 
 function num(v: FormDataEntryValue | null): number {
   if (!v) return 0;
@@ -30,6 +34,25 @@ export async function saveDocument(formData: FormData) {
 
   const amountExclVat = num(formData.get("amount_excl_vat"));
   const vatAmount = num(formData.get("vat_amount"));
+
+  let status = (str(formData.get("status")) as Enums<"document_status">) ?? "novy";
+  let note = str(formData.get("note"));
+
+  // QC: u noveho dokladu (ne editace) zkontrolovat mozne duplicity podle cisla + ICO
+  if (!id) {
+    const duplicate = await findPossibleDuplicate(
+      supabase,
+      DEFAULT_COMPANY_ID,
+      direction,
+      str(formData.get("document_number")),
+      str(formData.get("partner_ico"))
+    );
+    if (duplicate) {
+      status = "ke_kontrole";
+      const dupNote = `Možná duplicita - už existuje doklad se stejným číslem a IČO dodavatele (${duplicate.amount_total} Kč, stav "${duplicate.status}"). Zkontrolujte prosím.`;
+      note = note ? `${note} ${dupNote}` : dupNote;
+    }
+  }
 
   const payload: TablesInsert<"documents"> = {
     company_id: DEFAULT_COMPANY_ID,
@@ -52,8 +75,8 @@ export async function saveDocument(formData: FormData) {
     payment_method: (str(formData.get("payment_method")) as Enums<"payment_method">) ?? "prevod",
     category_id: str(formData.get("category_id")),
     project_id: str(formData.get("project_id")),
-    note: str(formData.get("note")),
-    status: (str(formData.get("status")) as Enums<"document_status">) ?? "novy",
+    note,
+    status,
   };
 
   if (id) {
@@ -315,9 +338,30 @@ export async function quickImportDocument(
 
     const missingCoreData = !amountTotal || amountTotal === 0;
 
+    // QC 1: kontrola souctu (zaklad + DPH = celkem), s tolerancí na zaokrouhlení
+    const amountCheck = checkAmountConsistency(amountExclVat, vatAmount, amountTotal);
+
+    // QC 2: mozna duplicita - stejne cislo dokladu + ICO dodavatele uz v appce existuje
+    const duplicate = await findPossibleDuplicate(
+      supabase,
+      DEFAULT_COMPANY_ID,
+      direction,
+      extracted.document_number,
+      extracted.partner_ico,
+      documentId
+    );
+
+    const needsReview = missingCoreData || !amountCheck.ok || duplicate !== null;
+
     const noteParts = ["Vytvořeno hromadným importem a vytěženo AI - zkontrolujte prosím."];
     if (extracted.partner_name) noteParts.push(`Dodavatel dle AI: ${extracted.partner_name}.`);
     if (extracted.note) noteParts.push(`Poznámka AI: ${extracted.note}`);
+    if (amountCheck.note) noteParts.push(amountCheck.note);
+    if (duplicate) {
+      noteParts.push(
+        `Možná duplicita - už existuje doklad se stejným číslem a IČO dodavatele (${duplicate.amount_total} Kč, stav "${duplicate.status}"). Zkontrolujte, než potvrdíte.`
+      );
+    }
 
     const { error: updateError } = await supabase
       .from("documents")
@@ -349,7 +393,7 @@ export async function quickImportDocument(
       documentNumber: extracted.document_number,
       partnerName: extracted.partner_name,
       amountTotal,
-      needsAttention: missingCoreData,
+      needsAttention: needsReview,
     };
   } catch (e) {
     const message = e instanceof Error ? e.message : "Vytěžení selhalo.";

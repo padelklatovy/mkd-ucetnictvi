@@ -84,6 +84,16 @@ vyžádání, ne automaticky při nahrání souboru.
 - [ ] Etapa 8 – Napojení na Fio API (datový model už je připraven – `bank_accounts.fio_token_ref`,
       `bank_transactions.source`)
 
+## Kontrola kvality přijatých dokladů
+
+Při hromadném importu (a při ručním uložení nového dokladu) appka automaticky kontroluje:
+- **Součet** - jestli základ DPH + DPH odpovídá celkové částce (tolerance 2 Kč na zaokrouhlení).
+  Nesedí-li to, doklad zůstává ve stavu "Ke kontrole"/"Chybí doklad" s vysvětlením v poznámce.
+- **Možná duplicita** - jestli už neexistuje doklad se stejným číslem dokladu a IČO dodavatele.
+  Appka duplicitu needuplikuje potichu, ale ani ji sama nezamítne - vždy skončí ve stavu
+  "Ke kontrole" s poznámkou, ať to člověk posoudí (může jít o skutečně dva různé doklady se
+  shodným číslováním, nebo o omylem dvakrát nahraný stejný doklad).
+
 ## Import rezervací z rezervačního systému (Padel Klatovy)
 
 Zaplacené rezervace (`paid_confirmed`) z appky `padel-klatovy-core` se dají naimportovat jako
