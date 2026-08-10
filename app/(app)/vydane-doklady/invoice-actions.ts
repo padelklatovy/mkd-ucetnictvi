@@ -92,15 +92,56 @@ export async function saveInvoice(formData: FormData): Promise<void> {
     documentNumber = await nextInvoiceNumber(supabase);
   }
 
+  const customerName = String(formData.get("customer_name") ?? "") || null;
+  const customerAddress = String(formData.get("customer_address") ?? "") || null;
+  const customerIco = String(formData.get("customer_ico") ?? "") || null;
+  const customerDic = String(formData.get("customer_dic") ?? "") || null;
+
+  // Odberatele ukladame/aktualizujeme do databaze partneru, aby slo priste
+  // vybrat ze seznamu misto opakovaneho vyplnovani/hledani v ARES.
+  let partnerId: string | null = null;
+  if (customerName) {
+    if (customerIco) {
+      const { data: existing } = await supabase
+        .from("business_partners")
+        .select("id")
+        .eq("company_id", DEFAULT_COMPANY_ID)
+        .eq("ico", customerIco)
+        .maybeSingle();
+
+      if (existing) {
+        await supabase
+          .from("business_partners")
+          .update({ name: customerName, address: customerAddress, dic: customerDic })
+          .eq("id", existing.id);
+        partnerId = existing.id;
+      } else {
+        const { data: created } = await supabase
+          .from("business_partners")
+          .insert({
+            company_id: DEFAULT_COMPANY_ID,
+            name: customerName,
+            address: customerAddress,
+            ico: customerIco,
+            dic: customerDic,
+          })
+          .select("id")
+          .single();
+        partnerId = created?.id ?? null;
+      }
+    }
+  }
+
   const payload = {
     company_id: DEFAULT_COMPANY_ID,
     direction: "vydany" as const,
     doc_type: "faktura" as const,
     document_number: documentNumber,
-    customer_name: String(formData.get("customer_name") ?? "") || null,
-    customer_address: String(formData.get("customer_address") ?? "") || null,
-    partner_ico: String(formData.get("customer_ico") ?? "") || null,
-    partner_dic: String(formData.get("customer_dic") ?? "") || null,
+    partner_id: partnerId,
+    customer_name: customerName,
+    customer_address: customerAddress,
+    partner_ico: customerIco,
+    partner_dic: customerDic,
     issue_date: String(formData.get("issue_date") ?? "") || null,
     taxable_supply_date: String(formData.get("taxable_supply_date") ?? "") || null,
     due_date: String(formData.get("due_date") ?? "") || null,

@@ -32,18 +32,32 @@ export function InvoiceForm({
   existingItems,
   bankAccounts,
   suggestedNumber,
+  existingPartners = [],
+  descriptionSuggestions = [],
+  preselectedPartnerId,
 }: {
   document?: Tables<"documents">;
   existingItems?: Tables<"document_line_items">[];
   bankAccounts: Tables<"bank_accounts">[];
   suggestedNumber: string;
+  existingPartners?: Tables<"business_partners">[];
+  descriptionSuggestions?: string[];
+  preselectedPartnerId?: string;
 }) {
   const [isPending, startTransition] = useTransition();
   const [aresStatus, setAresStatus] = useState<{ text: string; ok: boolean } | null>(null);
-  const [icoInput, setIcoInput] = useState(document?.partner_ico ?? "");
-  const [customerName, setCustomerName] = useState(document?.customer_name ?? "");
-  const [customerAddress, setCustomerAddress] = useState(document?.customer_address ?? "");
-  const [customerDic, setCustomerDic] = useState(document?.partner_dic ?? "");
+
+  const preselected = preselectedPartnerId
+    ? existingPartners.find((p) => p.id === preselectedPartnerId)
+    : undefined;
+
+  const [icoInput, setIcoInput] = useState(document?.partner_ico ?? preselected?.ico ?? "");
+  const [customerName, setCustomerName] = useState(document?.customer_name ?? preselected?.name ?? "");
+  const [customerAddress, setCustomerAddress] = useState(
+    document?.customer_address ?? preselected?.address ?? ""
+  );
+  const [customerDic, setCustomerDic] = useState(document?.partner_dic ?? preselected?.dic ?? "");
+  const [selectedPartnerId, setSelectedPartnerId] = useState(preselected?.id ?? "");
 
   const [items, setItems] = useState<InvoiceLineItem[]>(
     existingItems && existingItems.length > 0
@@ -71,6 +85,18 @@ export function InvoiceForm({
   }
   function removeItem(index: number) {
     setItems((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  function handlePartnerSelect(partnerId: string) {
+    setSelectedPartnerId(partnerId);
+    if (!partnerId) return;
+    const partner = existingPartners.find((p) => p.id === partnerId);
+    if (!partner) return;
+    setIcoInput(partner.ico ?? "");
+    setCustomerName(partner.name);
+    setCustomerAddress(partner.address ?? "");
+    setCustomerDic(partner.dic ?? "");
+    setAresStatus(null);
   }
 
   function handleAresLookup() {
@@ -111,6 +137,27 @@ export function InvoiceForm({
       {/* ODBĚRATEL */}
       <div>
         <h2 className="text-sm font-semibold text-slate-700 mb-2">Odběratel</h2>
+
+        {existingPartners.length > 0 ? (
+          <label className="block mb-3 max-w-sm">
+            <span className="block text-xs font-medium text-slate-500 mb-1">
+              Už jste fakturovali – vybrat uloženého odběratele
+            </span>
+            <select
+              value={selectedPartnerId}
+              onChange={(e) => handlePartnerSelect(e.target.value)}
+              className={inputClass}
+            >
+              <option value="">— nový odběratel —</option>
+              {existingPartners.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name} {p.ico ? `(IČO ${p.ico})` : ""}
+                </option>
+              ))}
+            </select>
+          </label>
+        ) : null}
+
         <div className="flex items-end gap-2 mb-3">
           <label className="text-xs flex-1 max-w-xs">
             <span className="block text-slate-500 mb-1">IČO</span>
@@ -267,6 +314,7 @@ export function InvoiceForm({
                         onChange={(e) => updateItem(idx, { description: e.target.value })}
                         className={inputClass}
                         placeholder="Popis položky"
+                        list="popis-napoveda"
                       />
                     </td>
                     <td className="px-3 py-1.5">
@@ -369,6 +417,12 @@ export function InvoiceForm({
         "Poznámka",
         <textarea name="note" defaultValue={document?.note ?? ""} rows={2} className={inputClass} />
       )}
+
+      <datalist id="popis-napoveda">
+        {descriptionSuggestions.map((d) => (
+          <option key={d} value={d} />
+        ))}
+      </datalist>
 
       <button
         type="submit"

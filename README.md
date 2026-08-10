@@ -156,6 +156,14 @@ Výdaje (přijaté doklady) a Bankovní pohyb ČSOB (nahraný výpis). CSV expor
 (`/api/exports/padel-revenue?month=YYYY-MM`) obsahuje všechny tři se sloupcem "Typ" a
 mezisoučty - jeden soubor k odevzdání účetní místo tří různých zdrojů.
 
+**Databáze odběratelů a opakovaná fakturace:** při každém uložení faktury s vyplněným IČO se
+odběratel automaticky uloží/aktualizuje v `business_partners` (žádná ruční správa navíc).
+Stránka `/vydane-doklady/odberatele` ukazuje všechny uložené odběratele s počtem a součtem
+fakturovaného, a tlačítkem "🧾 Nová faktura" u každého (předvyplní se název/adresa/IČO/DIČ).
+Ve formuláři nové faktury jde odběratele i vybrat přímo z rozbalovacího seznamu. Popisy položek
+mají chytré napovídání (`<datalist>`) z posledních 200 dřív použitých popisů - psaní stejné
+položky podruhé stačí začít psát a appka nabídne dokončení.
+
 ## Vystavování faktur (nahrazuje samostatnou appku Faktury-MKD)
 
 Bývalá samostatná appka (`faktury-mkd.html`, Claude Artifact) je teď součástí MKD Účetnictví -

@@ -33,11 +33,12 @@ function monthRange(monthStr: string) {
 export default async function VydaneDokladyPage({
   searchParams,
 }: {
-  searchParams: Promise<{ month?: string }>;
+  searchParams: Promise<{ month?: string; type?: string }>;
 }) {
-  const { month } = await searchParams;
+  const { month, type } = await searchParams;
   const showAll = month === "all";
   const monthStr = !showAll ? month || currentMonthStr() : "";
+  const onlyInvoices = type === "faktura";
 
   const supabase = await createClient();
 
@@ -54,6 +55,10 @@ export default async function VydaneDokladyPage({
     query = query.gte("issue_date", from).lte("issue_date", to);
   }
 
+  if (onlyInvoices) {
+    query = query.eq("doc_type", "faktura");
+  }
+
   const { data: documents, error } = await query;
 
   return (
@@ -66,6 +71,12 @@ export default async function VydaneDokladyPage({
           </p>
         </div>
         <div className="flex gap-2">
+          <Link
+            href="/vydane-doklady/odberatele"
+            className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+          >
+            👥 Odběratelé
+          </Link>
           <Link
             href="/vydane-doklady/nova-faktura"
             className="rounded-md border border-[#1e3a5f] bg-white px-4 py-2 text-sm font-medium text-[#1e3a5f] hover:bg-slate-50"
@@ -83,7 +94,7 @@ export default async function VydaneDokladyPage({
 
       <PadelImportPanel />
 
-      <div className="flex items-center gap-3 mb-1">
+      <div className="flex flex-wrap items-center gap-3 mb-4">
         {!showAll ? (
           <MonthSwitcher
             basePath="/vydane-doklady"
@@ -92,14 +103,37 @@ export default async function VydaneDokladyPage({
             nextMonth={shiftMonth(monthStr, 1)}
           />
         ) : (
-          <div className="mb-6 text-sm text-slate-600">Zobrazeny všechny doklady</div>
+          <div className="text-sm text-slate-600">Zobrazeny všechny doklady</div>
         )}
         <Link
-          href={showAll ? `/vydane-doklady?month=${currentMonthStr()}` : "/vydane-doklady?month=all"}
-          className="mb-6 text-xs text-[#1e3a5f] hover:underline"
+          href={
+            showAll
+              ? `/vydane-doklady?month=${currentMonthStr()}${onlyInvoices ? "&type=faktura" : ""}`
+              : `/vydane-doklady?month=all${onlyInvoices ? "&type=faktura" : ""}`
+          }
+          className="text-xs text-[#1e3a5f] hover:underline"
         >
           {showAll ? "Zpět na aktuální měsíc" : "Zobrazit vše"}
         </Link>
+
+        <div className="ml-auto inline-flex rounded-md border border-slate-300 bg-white p-0.5">
+          <Link
+            href={`/vydane-doklady?${new URLSearchParams({ ...(month ? { month } : {}) }).toString()}`}
+            className={`rounded px-3 py-1 text-xs font-medium ${
+              !onlyInvoices ? "bg-[#1e3a5f] text-white" : "text-slate-600 hover:bg-slate-50"
+            }`}
+          >
+            Vše
+          </Link>
+          <Link
+            href={`/vydane-doklady?${new URLSearchParams({ ...(month ? { month } : {}), type: "faktura" }).toString()}`}
+            className={`rounded px-3 py-1 text-xs font-medium ${
+              onlyInvoices ? "bg-[#1e3a5f] text-white" : "text-slate-600 hover:bg-slate-50"
+            }`}
+          >
+            🧾 Jen faktury
+          </Link>
+        </div>
       </div>
 
       <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm">
@@ -178,7 +212,11 @@ export default async function VydaneDokladyPage({
             {(!documents || documents.length === 0) && (
               <tr>
                 <td colSpan={7} className="px-4 py-8 text-center text-slate-400">
-                  {error ? `Chyba načtení: ${error.message}` : "Za zvolené období žádné vydané doklady."}
+                  {error
+                    ? `Chyba načtení: ${error.message}`
+                    : onlyInvoices
+                      ? "Za zvolené období žádné vystavené faktury."
+                      : "Za zvolené období žádné vydané doklady."}
                 </td>
               </tr>
             )}
