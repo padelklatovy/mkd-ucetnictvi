@@ -224,38 +224,50 @@ export type Database = {
       }
       companies: {
         Row: {
+          address: string | null
           country: string
           created_at: string
           currency: string
           dic: string | null
+          email: string | null
           ico: string
           id: string
           is_demo: boolean
           name: string
+          phone: string | null
+          regnote: string | null
           updated_at: string
           vat_payer: boolean
         }
         Insert: {
+          address?: string | null
           country?: string
           created_at?: string
           currency?: string
           dic?: string | null
+          email?: string | null
           ico: string
           id?: string
           is_demo?: boolean
           name: string
+          phone?: string | null
+          regnote?: string | null
           updated_at?: string
           vat_payer?: boolean
         }
         Update: {
+          address?: string | null
           country?: string
           created_at?: string
           currency?: string
           dic?: string | null
+          email?: string | null
           ico?: string
           id?: string
           is_demo?: boolean
           name?: string
+          phone?: string | null
+          regnote?: string | null
           updated_at?: string
           vat_payer?: boolean
         }
@@ -330,6 +342,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           currency: string
+          customer_address: string | null
           customer_name: string | null
           direction: Database["public"]["Enums"]["document_direction"]
           doc_type: Database["public"]["Enums"]["document_type"]
@@ -346,6 +359,8 @@ export type Database = {
           partner_dic: string | null
           partner_ico: string | null
           partner_id: string | null
+          payment_bank_account: string | null
+          payment_iban: string | null
           payment_method: Database["public"]["Enums"]["payment_method"]
           project_id: string | null
           revenue_source: string | null
@@ -364,6 +379,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           currency?: string
+          customer_address?: string | null
           customer_name?: string | null
           direction: Database["public"]["Enums"]["document_direction"]
           doc_type?: Database["public"]["Enums"]["document_type"]
@@ -380,6 +396,8 @@ export type Database = {
           partner_dic?: string | null
           partner_ico?: string | null
           partner_id?: string | null
+          payment_bank_account?: string | null
+          payment_iban?: string | null
           payment_method?: Database["public"]["Enums"]["payment_method"]
           project_id?: string | null
           revenue_source?: string | null
@@ -398,6 +416,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           currency?: string
+          customer_address?: string | null
           customer_name?: string | null
           direction?: Database["public"]["Enums"]["document_direction"]
           doc_type?: Database["public"]["Enums"]["document_type"]
@@ -414,6 +433,8 @@ export type Database = {
           partner_dic?: string | null
           partner_ico?: string | null
           partner_id?: string | null
+          payment_bank_account?: string | null
+          payment_iban?: string | null
           payment_method?: Database["public"]["Enums"]["payment_method"]
           project_id?: string | null
           revenue_source?: string | null
@@ -513,6 +534,45 @@ export type Database = {
           id?: string
           is_active?: boolean
           name?: string
+        }
+        Relationships: []
+      }
+      document_line_items: {
+        Row: {
+          company_id: string
+          created_at: string
+          description: string
+          document_id: string
+          id: string
+          position: number
+          quantity: number
+          unit: string
+          unit_price: number
+          vat_rate_percent: number
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          description?: string
+          document_id: string
+          id?: string
+          position?: number
+          quantity?: number
+          unit?: string
+          unit_price?: number
+          vat_rate_percent?: number
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          description?: string
+          document_id?: string
+          id?: string
+          position?: number
+          quantity?: number
+          unit?: string
+          unit_price?: number
+          vat_rate_percent?: number
         }
         Relationships: []
       }

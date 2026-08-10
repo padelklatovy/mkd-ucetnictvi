@@ -156,6 +156,26 @@ Výdaje (přijaté doklady) a Bankovní pohyb ČSOB (nahraný výpis). CSV expor
 (`/api/exports/padel-revenue?month=YYYY-MM`) obsahuje všechny tři se sloupcem "Typ" a
 mezisoučty - jeden soubor k odevzdání účetní místo tří různých zdrojů.
 
+## Vystavování faktur (nahrazuje samostatnou appku Faktury-MKD)
+
+Bývalá samostatná appka (`faktury-mkd.html`, Claude Artifact) je teď součástí MKD Účetnictví -
+**historie faktur se ukládá do Supabase, ne do dočasného `window.storage`**, takže při
+nahrazení kódu appky (redeploy) žádná data nezmizí.
+
+- **Nová faktura** (`/vydane-doklady/nova-faktura`): ARES lookup podle IČO (server-side, žádné
+  CORS omezení prohlížeče), řádkové položky s libovolnou sazbou DPH, živá rekapitulace DPH podle
+  sazby, výběr firemního bankovního účtu pro QR platbu.
+- **Číslování faktur**: formát `pořadí/měsíc/rok` (např. `1/08/2026`), počítá se automaticky
+  podle nejvyššího čísla použitého v aktuálním roce.
+- **Tisk/PDF** (`/faktura/[id]`): samostatná stránka bez bočního menu (čistá pro tisk/uložení
+  jako PDF přes tiskový dialog prohlížeče), s QR kódem pro platbu (formát SPD, generovaný
+  server-side přes `qrcode`).
+- **Úprava** existující faktury: `/vydane-doklady/[id]/uprava-faktury`.
+- Položky faktury jsou v tabulce `document_line_items`, propojené s `documents`
+  (`company_id`, `document_id`), s vlastní RLS podle stejného vzoru jako zbytek appky.
+- Souhrnná sazba DPH na `documents` (pro exporty a přehledy) se automaticky odvozuje jako sazba
+  s největším základem mezi položkami - skutečný rozpad víc sazeb zůstává v položkách faktury.
+
 ## Databázové tabulky
 
 `companies`, `profiles`, `company_users`, `categories`, `projects`, `business_partners`,

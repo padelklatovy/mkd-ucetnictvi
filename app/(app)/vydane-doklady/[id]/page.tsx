@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { DEFAULT_COMPANY_ID } from "@/lib/config";
@@ -33,6 +34,34 @@ export default async function VydanyDokladDetailPage({
     ]);
 
   if (!document) notFound();
+
+  // Fakturam s polozkami se resi editace pres samostatny formular (radky, DPH
+  // rekapitulace, QR platba) - obecny formular by je mohl rozbit.
+  if (document.doc_type === "faktura") {
+    return (
+      <div className="max-w-3xl space-y-6">
+        <h1 className="text-xl font-semibold text-slate-900">
+          Faktura {document.document_number ?? "(bez čísla)"}
+        </h1>
+        <div className="rounded-lg border border-slate-200 bg-white p-6 flex items-center gap-4">
+          <Link
+            href={`/faktura/${document.id}`}
+            target="_blank"
+            className="rounded-md bg-[#1e3a5f] px-4 py-2 text-sm font-medium text-white hover:bg-[#14293f]"
+          >
+            Zobrazit / tisk faktury
+          </Link>
+          <Link
+            href={`/vydane-doklady/${document.id}/uprava-faktury`}
+            className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
+          >
+            Upravit fakturu
+          </Link>
+        </div>
+        <DocumentFilesPanel documentId={document.id} direction={document.direction} files={files ?? []} />
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-3xl space-y-6">

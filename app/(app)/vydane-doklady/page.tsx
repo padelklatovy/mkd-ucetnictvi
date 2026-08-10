@@ -43,7 +43,7 @@ export default async function VydaneDokladyPage({
 
   let query = supabase
     .from("documents")
-    .select("id,document_number,partner_ico,customer_name,issue_date,amount_total,due_date,paid_date,status,revenue_source,created_at,business_partners(name)")
+    .select("id,document_number,partner_ico,customer_name,doc_type,issue_date,amount_total,due_date,paid_date,status,revenue_source,created_at,business_partners(name)")
     .eq("company_id", DEFAULT_COMPANY_ID)
     .eq("direction", "vydany")
     .eq("is_archived", false)
@@ -65,12 +65,20 @@ export default async function VydaneDokladyPage({
             Faktury vystavené zákazníkům – vaše <span className="font-medium text-green-600">tržby</span> (peníze jdou dovnitř)
           </p>
         </div>
-        <Link
-          href="/vydane-doklady/novy"
-          className="rounded-md bg-[#1e3a5f] px-4 py-2 text-sm font-medium text-white hover:bg-[#14293f]"
-        >
-          + Nový doklad
-        </Link>
+        <div className="flex gap-2">
+          <Link
+            href="/vydane-doklady/nova-faktura"
+            className="rounded-md border border-[#1e3a5f] bg-white px-4 py-2 text-sm font-medium text-[#1e3a5f] hover:bg-slate-50"
+          >
+            🧾 Nová faktura
+          </Link>
+          <Link
+            href="/vydane-doklady/novy"
+            className="rounded-md bg-[#1e3a5f] px-4 py-2 text-sm font-medium text-white hover:bg-[#14293f]"
+          >
+            + Nový doklad
+          </Link>
+        </div>
       </div>
 
       <PadelImportPanel />
@@ -142,16 +150,27 @@ export default async function VydaneDokladyPage({
                     <StatusBadge status={doc.status} />
                   </td>
                   <td className="px-4 py-2.5 text-right">
-                    <DeleteDocumentButton
-                      id={doc.id}
-                      direction="vydany"
-                      label={
-                        (doc as unknown as { business_partners?: { name: string } | null })
-                          .business_partners?.name ??
-                        doc.customer_name ??
-                        "doklad bez jména"
-                      }
-                    />
+                    <div className="flex items-center justify-end gap-3">
+                      {doc.doc_type === "faktura" ? (
+                        <Link
+                          href={`/faktura/${doc.id}`}
+                          target="_blank"
+                          className="text-xs text-[#1e3a5f] hover:underline"
+                        >
+                          Zobrazit fakturu
+                        </Link>
+                      ) : null}
+                      <DeleteDocumentButton
+                        id={doc.id}
+                        direction="vydany"
+                        label={
+                          (doc as unknown as { business_partners?: { name: string } | null })
+                            .business_partners?.name ??
+                          doc.customer_name ??
+                          "doklad bez jména"
+                        }
+                      />
+                    </div>
                   </td>
                 </tr>
               );
