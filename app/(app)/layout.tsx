@@ -12,9 +12,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     .select("id", { count: "exact", head: true });
 
   return (
-    <div className="flex min-h-screen w-full">
+    <div className="flex flex-col md:flex-row min-h-screen w-full">
       <Sidebar userEmail={user?.email} />
-      <main className="flex-1 min-w-0 p-8">
+      <main className="flex-1 min-w-0 p-4 md:p-8">
         {companyAccessCount === 0 ? (
           <div className="max-w-lg rounded-lg border border-orange-200 bg-orange-50 p-6 text-sm text-orange-800">
             Váš účet ({user?.email}) zatím nemá přiřazený přístup k žádné firmě. Požádejte

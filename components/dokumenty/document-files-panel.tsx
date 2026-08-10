@@ -27,16 +27,24 @@ export function DocumentFilesPanel({
 }) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const browseInputRef = useRef<HTMLInputElement>(null);
 
-  function handleUpload(formData: FormData) {
+  function handleUpload(file: File) {
     setError(null);
+    const formData = new FormData();
+    formData.append("document_id", documentId);
+    formData.append("direction", direction);
+    formData.append("file", file);
+
     startTransition(async () => {
       try {
         await uploadDocumentFile(formData);
-        if (fileInputRef.current) fileInputRef.current.value = "";
       } catch (e) {
         setError(e instanceof Error ? e.message : "Nahrání se nezdařilo.");
+      } finally {
+        if (cameraInputRef.current) cameraInputRef.current.value = "";
+        if (browseInputRef.current) browseInputRef.current.value = "";
       }
     });
   }
@@ -99,26 +107,49 @@ export function DocumentFilesPanel({
         </ul>
       )}
 
-      <form action={handleUpload} className="flex items-center gap-2">
-        <input type="hidden" name="document_id" value={documentId} />
-        <input type="hidden" name="direction" value={direction} />
+      <div className="flex flex-wrap items-center gap-2">
         <input
-          ref={fileInputRef}
+          ref={cameraInputRef}
           type="file"
-          name="file"
+          accept="image/jpeg,image/png"
+          capture="environment"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) handleUpload(file);
+          }}
+        />
+        <input
+          ref={browseInputRef}
+          type="file"
           accept="application/pdf,image/jpeg,image/png"
-          required
-          className="text-xs text-slate-600 file:mr-3 file:rounded-md file:border-0 file:bg-slate-100 file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-slate-700 hover:file:bg-slate-200"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) handleUpload(file);
+          }}
         />
         <button
-          type="submit"
+          type="button"
           disabled={isPending}
+          onClick={() => cameraInputRef.current?.click()}
           className="rounded-md bg-[#1e3a5f] px-3 py-1.5 text-xs font-medium text-white hover:bg-[#14293f] disabled:opacity-50 shrink-0"
         >
-          {isPending ? "Nahrávám…" : "Nahrát"}
+          {isPending ? "Nahrávám…" : "📷 Vyfotit"}
         </button>
-      </form>
-      <p className="mt-2 text-[11px] text-slate-400">PDF, JPG nebo PNG, max. 15 MB.</p>
+        <button
+          type="button"
+          disabled={isPending}
+          onClick={() => browseInputRef.current?.click()}
+          className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 shrink-0"
+        >
+          {isPending ? "Nahrávám…" : "Vybrat soubor (PDF/foto)"}
+        </button>
+      </div>
+      <p className="mt-2 text-[11px] text-slate-400">
+        &bdquo;Vybrat soubor&ldquo; jde použít i na naskenované PDF z appky Poznámky (Sdílet →
+        Uložit do Souborů). PDF, JPG nebo PNG, max. 15 MB.
+      </p>
 
       {error ? <p className="mt-2 text-xs text-red-600">{error}</p> : null}
     </div>
