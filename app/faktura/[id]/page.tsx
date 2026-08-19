@@ -72,6 +72,21 @@ export default async function FakturaPage({ params }: { params: Promise<{ id: st
     byRate[key].vat += vat;
   });
 
+  const paymentMethodLabels: Record<string, string> = {
+    prevod: "Převodem",
+    hotovost: "Hotově",
+    karta: "Kartou",
+    ostatni: "Ostatní",
+  };
+  const paymentMethodLabel = document.payment_method
+    ? paymentMethodLabels[document.payment_method] ?? document.payment_method
+    : null;
+
+  // Misto vystaveni - posledni cast adresy firmy za posledni carkou (napr. "...339 01 Klatovy" -> "Klatovy")
+  const placeOfIssue = company.address
+    ? company.address.split(",").pop()?.trim().replace(/^\d{3}\s?\d{2}\s+/, "")
+    : null;
+
   return (
     <div className="min-h-screen bg-slate-100 py-8 print:bg-white print:py-0">
       <div className="max-w-3xl mx-auto mb-4 flex items-center justify-between print:hidden">
@@ -135,7 +150,13 @@ export default async function FakturaPage({ params }: { params: Promise<{ id: st
           </div>
         </div>
 
-        <div className="grid grid-cols-4 gap-4 mb-8 text-sm border-t border-b border-slate-100 py-3">
+        <div className="grid grid-cols-3 gap-4 mb-8 text-sm border-t border-b border-slate-100 py-3">
+          {placeOfIssue ? (
+            <div>
+              <div className="text-xs text-slate-600">Místo vystavení</div>
+              <div>{placeOfIssue}</div>
+            </div>
+          ) : null}
           <div>
             <div className="text-xs text-slate-600">Vystaveno</div>
             <div>{formatDate(document.issue_date)}</div>
@@ -152,6 +173,12 @@ export default async function FakturaPage({ params }: { params: Promise<{ id: st
             <div className="text-xs text-slate-600">Variabilní symbol</div>
             <div>{document.variable_symbol ?? "—"}</div>
           </div>
+          {paymentMethodLabel ? (
+            <div>
+              <div className="text-xs text-slate-600">Forma úhrady</div>
+              <div>{paymentMethodLabel}</div>
+            </div>
+          ) : null}
         </div>
 
         <table className="w-full text-sm mb-6">
