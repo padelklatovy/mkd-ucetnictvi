@@ -331,7 +331,8 @@ export function InvoiceForm({
                     <td className="px-3 py-1.5">
                       <input
                         type="number"
-                        step="0.01"
+                        step="1"
+                        min="0"
                         value={it.quantity === 0 ? "" : it.quantity}
                         onChange={(e) =>
                           updateItem(idx, {
