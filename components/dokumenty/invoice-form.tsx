@@ -74,6 +74,13 @@ export function InvoiceForm({
   const [bankAccountId, setBankAccountId] = useState(bankAccounts[0]?.id ?? "");
   const [paid, setPaid] = useState(document?.status === "zaplaceny");
 
+  // Ktere pole (Cena/j. nebo Celkem) u ktere radky se prave edituje - dokud se
+  // pole edituje, zobrazuje presne to, co uzivatel napsal (zadny prepocet mu to
+  // "nesebere" pod rukama). Prepocita se vzdy jen to DRUHE, needitovane pole.
+  const [editing, setEditing] = useState<{ idx: number; field: "unitPrice" | "total"; raw: string } | null>(
+    null
+  );
+
   const totals = calcInvoiceTotals(items);
   const selectedAccount = bankAccounts.find((a) => a.id === bankAccountId) ?? bankAccounts[0];
 
@@ -88,14 +95,15 @@ export function InvoiceForm({
   }
   // Zpetny dopocet: zada se konecna cena s DPH za celou radku, appka z ni
   // dopocita cenu za jednotku bez DPH (co je pole, ktere se skutecne uklada).
+  // Behem psani se NEZAOKROUHLUJE (aby cislo neposkakovalo pod rukama) -
+  // zaokrouhleni na haleře resi az onBlur primo u pole.
   function setTotalInclVat(index: number, totalInclVat: number) {
     setItems((prev) =>
       prev.map((it, i) => {
         if (i !== index) return it;
         const baseTotal = totalInclVat / (1 + it.vatRatePercent / 100);
         const qty = it.quantity || 1;
-        const roundedUnitPrice = Math.round((baseTotal / qty) * 100) / 100;
-        return { ...it, unitPrice: roundedUnitPrice };
+        return { ...it, unitPrice: baseTotal / qty };
       })
     );
   }
@@ -355,12 +363,23 @@ export function InvoiceForm({
                       <input
                         type="number"
                         step="0.01"
-                        value={it.unitPrice === 0 ? "" : it.unitPrice}
-                        onChange={(e) =>
-                          updateItem(idx, {
-                            unitPrice: e.target.value === "" ? 0 : Number(e.target.value),
-                          })
+                        value={
+                          editing?.idx === idx && editing.field === "unitPrice"
+                            ? editing.raw
+                            : it.unitPrice === 0
+                              ? ""
+                              : it.unitPrice
                         }
+                        onChange={(e) => {
+                          const raw = e.target.value;
+                          setEditing({ idx, field: "unitPrice", raw });
+                          const num = raw === "" ? 0 : Number(raw);
+                          if (!Number.isNaN(num)) updateItem(idx, { unitPrice: num });
+                        }}
+                        onBlur={() => {
+                          updateItem(idx, { unitPrice: Math.round(it.unitPrice * 100) / 100 });
+                          setEditing(null);
+                        }}
                         placeholder="0"
                         className={inputClass}
                       />
@@ -382,11 +401,21 @@ export function InvoiceForm({
                         type="number"
                         step="0.01"
                         value={
-                          lineTotal.total === 0 ? "" : Math.round(lineTotal.total * 100) / 100
+                          editing?.idx === idx && editing.field === "total"
+                            ? editing.raw
+                            : lineTotal.total === 0
+                              ? ""
+                              : Math.round(lineTotal.total * 100) / 100
                         }
                         onChange={(e) => {
-                          const raw = e.target.value === "" ? 0 : Number(e.target.value);
-                          setTotalInclVat(idx, raw);
+                          const raw = e.target.value;
+                          setEditing({ idx, field: "total", raw });
+                          const num = raw === "" ? 0 : Number(raw);
+                          if (!Number.isNaN(num)) setTotalInclVat(idx, num);
+                        }}
+                        onBlur={() => {
+                          updateItem(idx, { unitPrice: Math.round(it.unitPrice * 100) / 100 });
+                          setEditing(null);
                         }}
                         placeholder="0"
                         className={`${inputClass} text-right font-medium`}
