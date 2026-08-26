@@ -70,12 +70,6 @@ export function InvoiceForm({
         }))
       : [{ description: "", quantity: 1, unit: "ks", unitPrice: 0, vatRatePercent: 21 }]
   );
-  // Pro kazdou polozku: false = "Cena/j." se zadava bez DPH (vychozi), true = s DPH
-  // (appka pak dopocita cenu bez DPH zpetne). Ovlivnuje jen zobrazeni/zadavani,
-  // ulozena hodnota unitPrice je vzdy bez DPH.
-  const [priceIncludesVat, setPriceIncludesVat] = useState<boolean[]>(
-    (existingItems && existingItems.length > 0 ? existingItems : [null]).map(() => false)
-  );
 
   const [bankAccountId, setBankAccountId] = useState(bankAccounts[0]?.id ?? "");
   const [paid, setPaid] = useState(document?.status === "zaplaceny");
@@ -88,14 +82,21 @@ export function InvoiceForm({
   }
   function addItem() {
     setItems((prev) => [...prev, { description: "", quantity: 1, unit: "ks", unitPrice: 0, vatRatePercent: 21 }]);
-    setPriceIncludesVat((prev) => [...prev, false]);
   }
   function removeItem(index: number) {
     setItems((prev) => prev.filter((_, i) => i !== index));
-    setPriceIncludesVat((prev) => prev.filter((_, i) => i !== index));
   }
-  function togglePriceMode(index: number) {
-    setPriceIncludesVat((prev) => prev.map((v, i) => (i === index ? !v : v)));
+  // Zpetny dopocet: zada se konecna cena s DPH za celou radku, appka z ni
+  // dopocita cenu za jednotku bez DPH (co je pole, ktere se skutecne uklada).
+  function setTotalInclVat(index: number, totalInclVat: number) {
+    setItems((prev) =>
+      prev.map((it, i) => {
+        if (i !== index) return it;
+        const baseTotal = totalInclVat / (1 + it.vatRatePercent / 100);
+        const qty = it.quantity || 1;
+        return { ...it, unitPrice: baseTotal / qty };
+      })
+    );
   }
 
   function handlePartnerSelect(partnerId: string) {
@@ -308,7 +309,7 @@ export function InvoiceForm({
                 <th className="px-3 py-2 font-medium">Popis</th>
                 <th className="px-3 py-2 font-medium w-20">Množ.</th>
                 <th className="px-3 py-2 font-medium w-20">MJ</th>
-                <th className="px-3 py-2 font-medium w-28">Cena/j.</th>
+                <th className="px-3 py-2 font-medium w-40">Cena/j.</th>
                 <th className="px-3 py-2 font-medium w-24">DPH %</th>
                 <th className="px-3 py-2 font-medium w-28 text-right">Celkem</th>
                 <th className="px-3 py-2 font-medium w-10"></th>
@@ -350,34 +351,19 @@ export function InvoiceForm({
                       />
                     </td>
                     <td className="px-3 py-1.5">
-                      {(() => {
-                        const includesVat = priceIncludesVat[idx] ?? false;
-                        const vatMultiplier = 1 + it.vatRatePercent / 100;
-                        const displayValue = includesVat ? it.unitPrice * vatMultiplier : it.unitPrice;
-                        return (
-                          <div>
-                            <input
-                              type="number"
-                              step="0.01"
-                              value={displayValue === 0 ? "" : Math.round(displayValue * 100) / 100}
-                              onChange={(e) => {
-                                const raw = e.target.value === "" ? 0 : Number(e.target.value);
-                                const newUnitPrice = includesVat ? raw / vatMultiplier : raw;
-                                updateItem(idx, { unitPrice: newUnitPrice });
-                              }}
-                              placeholder="0"
-                              className={inputClass}
-                            />
-                            <button
-                              type="button"
-                              onClick={() => togglePriceMode(idx)}
-                              className="mt-0.5 text-[10px] text-slate-400 hover:text-[#1e3a5f] hover:underline"
-                            >
-                              {includesVat ? "zadáno s DPH" : "zadáno bez DPH"} · přepnout
-                            </button>
-                          </div>
-                        );
-                      })()}
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={it.unitPrice === 0 ? "" : it.unitPrice}
+                        onChange={(e) =>
+                          updateItem(idx, {
+                            unitPrice: e.target.value === "" ? 0 : Number(e.target.value),
+                          })
+                        }
+                        placeholder="0"
+                        className={inputClass}
+                      />
+                      <div className="text-[10px] text-slate-400 mt-0.5">cena bez DPH</div>
                     </td>
                     <td className="px-3 py-1.5">
                       <select
@@ -390,8 +376,21 @@ export function InvoiceForm({
                         <option value={0}>0</option>
                       </select>
                     </td>
-                    <td className="px-3 py-1.5 text-right text-slate-700">
-                      {formatCurrency(lineTotal.total)}
+                    <td className="px-3 py-1.5">
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={
+                          lineTotal.total === 0 ? "" : Math.round(lineTotal.total * 100) / 100
+                        }
+                        onChange={(e) => {
+                          const raw = e.target.value === "" ? 0 : Number(e.target.value);
+                          setTotalInclVat(idx, raw);
+                        }}
+                        placeholder="0"
+                        className={`${inputClass} text-right font-medium`}
+                      />
+                      <div className="text-[10px] text-slate-400 mt-0.5 text-right">celkem s DPH</div>
                     </td>
                     <td className="px-3 py-1.5 text-right">
                       <button
