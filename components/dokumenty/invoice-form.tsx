@@ -94,7 +94,8 @@ export function InvoiceForm({
         if (i !== index) return it;
         const baseTotal = totalInclVat / (1 + it.vatRatePercent / 100);
         const qty = it.quantity || 1;
-        return { ...it, unitPrice: baseTotal / qty };
+        const roundedUnitPrice = Math.round((baseTotal / qty) * 100) / 100;
+        return { ...it, unitPrice: roundedUnitPrice };
       })
     );
   }
