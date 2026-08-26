@@ -368,7 +368,7 @@ export function InvoiceForm({
                             ? editing.raw
                             : it.unitPrice === 0
                               ? ""
-                              : it.unitPrice
+                              : Math.round(it.unitPrice * 100) / 100
                         }
                         onChange={(e) => {
                           const raw = e.target.value;
@@ -376,10 +376,7 @@ export function InvoiceForm({
                           const num = raw === "" ? 0 : Number(raw);
                           if (!Number.isNaN(num)) updateItem(idx, { unitPrice: num });
                         }}
-                        onBlur={() => {
-                          updateItem(idx, { unitPrice: Math.round(it.unitPrice * 100) / 100 });
-                          setEditing(null);
-                        }}
+                        onBlur={() => setEditing(null)}
                         placeholder="0"
                         className={inputClass}
                       />
@@ -413,10 +410,7 @@ export function InvoiceForm({
                           const num = raw === "" ? 0 : Number(raw);
                           if (!Number.isNaN(num)) setTotalInclVat(idx, num);
                         }}
-                        onBlur={() => {
-                          updateItem(idx, { unitPrice: Math.round(it.unitPrice * 100) / 100 });
-                          setEditing(null);
-                        }}
+                        onBlur={() => setEditing(null)}
                         placeholder="0"
                         className={`${inputClass} text-right font-medium`}
                       />
