@@ -231,7 +231,7 @@ export default async function NabidkaPage({ params }: { params: Promise<{ id: st
 
         <div className="text-sm text-slate-700 mb-8">
           <div>S pozdravem,</div>
-          <div className="font-semibold mt-2">Dr. Ing. Karel Luňáček</div>
+          <div className="font-semibold mt-2">Karel Luňáček</div>
           <div style={{ color: GREEN_MID }}>PADELUN</div>
           <div className="text-slate-500">info@padelun.cz</div>
         </div>
@@ -239,7 +239,7 @@ export default async function NabidkaPage({ params }: { params: Promise<{ id: st
         <div className="h-px mb-3" style={{ backgroundColor: GREEN_MID }} />
         <div className="flex justify-between text-[11px] text-slate-500">
           <span>
-            {company.name} — PADELUN Consulting{company.dic ? ` | DIČ: ${company.dic}` : ""}
+            {company.name} — PADELUN{company.dic ? ` | DIČ: ${company.dic}` : ""}
           </span>
           <span>Strana 1 / 1</span>
         </div>
