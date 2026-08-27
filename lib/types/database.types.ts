@@ -576,6 +576,114 @@ export type Database = {
         }
         Relationships: []
       }
+      quotes: {
+        Row: {
+          amount_excl_vat: number
+          amount_total: number
+          company_id: string
+          converted_to_document_id: string | null
+          created_at: string
+          customer_address: string | null
+          customer_dic: string | null
+          customer_ico: string | null
+          customer_name: string | null
+          id: string
+          is_archived: boolean
+          issue_date: string | null
+          note: string | null
+          partner_id: string | null
+          quote_number: string | null
+          status: Database["public"]["Enums"]["quote_status"]
+          updated_at: string
+          valid_until: string | null
+          vat_amount: number
+          vat_rate: Database["public"]["Enums"]["vat_rate"] | null
+        }
+        Insert: {
+          amount_excl_vat?: number
+          amount_total?: number
+          company_id: string
+          converted_to_document_id?: string | null
+          created_at?: string
+          customer_address?: string | null
+          customer_dic?: string | null
+          customer_ico?: string | null
+          customer_name?: string | null
+          id?: string
+          is_archived?: boolean
+          issue_date?: string | null
+          note?: string | null
+          partner_id?: string | null
+          quote_number?: string | null
+          status?: Database["public"]["Enums"]["quote_status"]
+          updated_at?: string
+          valid_until?: string | null
+          vat_amount?: number
+          vat_rate?: Database["public"]["Enums"]["vat_rate"] | null
+        }
+        Update: {
+          amount_excl_vat?: number
+          amount_total?: number
+          company_id?: string
+          converted_to_document_id?: string | null
+          created_at?: string
+          customer_address?: string | null
+          customer_dic?: string | null
+          customer_ico?: string | null
+          customer_name?: string | null
+          id?: string
+          is_archived?: boolean
+          issue_date?: string | null
+          note?: string | null
+          partner_id?: string | null
+          quote_number?: string | null
+          status?: Database["public"]["Enums"]["quote_status"]
+          updated_at?: string
+          valid_until?: string | null
+          vat_amount?: number
+          vat_rate?: Database["public"]["Enums"]["vat_rate"] | null
+        }
+        Relationships: []
+      }
+      quote_line_items: {
+        Row: {
+          company_id: string
+          created_at: string
+          description: string
+          id: string
+          position: number
+          quantity: number
+          quote_id: string
+          unit: string
+          unit_price: number
+          vat_rate_percent: number
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          description?: string
+          id?: string
+          position?: number
+          quantity?: number
+          quote_id: string
+          unit?: string
+          unit_price?: number
+          vat_rate_percent?: number
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          description?: string
+          id?: string
+          position?: number
+          quantity?: number
+          quote_id?: string
+          unit?: string
+          unit_price?: number
+          vat_rate_percent?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -639,6 +747,7 @@ export type Database = {
         | "ostatni"
       match_status: "navrzeno" | "potvrzeno" | "zamitnuto"
       payment_method: "prevod" | "hotovost" | "karta" | "ostatni"
+      quote_status: "navrh" | "odeslana" | "prijata" | "zamitnuta" | "prevedena"
       transaction_direction: "prichozi" | "odchozi"
       user_role: "administrator" | "uzivatel" | "ucetni"
       vat_rate:

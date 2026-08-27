@@ -9,6 +9,7 @@ const navItems = [
   { href: "/prehled", label: "Přehled", icon: "📊" },
   { href: "/prijate-doklady", label: "Přijaté doklady", sub: "od dodavatelů – náklady", icon: "📥" },
   { href: "/vydane-doklady", label: "Vydané doklady", sub: "zákazníkům – tržby", icon: "📤" },
+  { href: "/nabidky", label: "Nabídky", sub: "cenové nabídky zboží", icon: "📋" },
   { href: "/banka", label: "Banka", icon: "🏦" },
   { href: "/ke-kontrole", label: "Ke kontrole", icon: "⚠️" },
   { href: "/exporty", label: "Exporty", icon: "📁" },

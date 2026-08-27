@@ -164,6 +164,22 @@ Ve formuláři nové faktury jde odběratele i vybrat přímo z rozbalovacího s
 mají chytré napovídání (`<datalist>`) z posledních 200 dřív použitých popisů - psaní stejné
 položky podruhé stačí začít psát a appka nabídne dokončení.
 
+## Nabídky (cenové nabídky zboží)
+
+Samostatný modul odděl od faktur - nabídky **nejsou daňový doklad**, proto nejsou v tabulce
+`documents` a nezasahují do žádných účetních exportů/přehledů. Vlastní tabulky `quotes` +
+`quote_line_items`, vlastní číslování (`NAB-1/08/2026`).
+
+- **Nová nabídka** (`/nabidky/nova`): stejný formulář jako u faktur (ARES lookup, položky,
+  obousměrný přepočet cena/celkem s plnou přesností, napovídání popisů - sdílené i s fakturami),
+  jen místo splatnosti "Platnost nabídky do" a bez platebních údajů/QR.
+- **Náhled/tisk** (`/nabidka/[id]`): samostatná stránka bez bočního menu, se stavem nabídky
+  (Návrh/Odeslána/Přijata/Zamítnuta/Fakturováno).
+- **Převést na fakturu** - jedním tlačítkem se ze všech položek nabídky vytvoří nová faktura
+  (vlastní číslo, splatnost +14 dní), beze změny textu. Nabídka zůstane zachovaná, jen se označí
+  jako "Fakturováno" a propojí s novou fakturou.
+- Zákazníci se ukládají do stejné databáze `business_partners` jako u faktur.
+
 ## Vystavování faktur (nahrazuje samostatnou appku Faktury-MKD)
 
 Bývalá samostatná appka (`faktury-mkd.html`, Claude Artifact) je teď součástí MKD Účetnictví -
