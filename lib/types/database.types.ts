@@ -587,11 +587,14 @@ export type Database = {
           customer_dic: string | null
           customer_ico: string | null
           customer_name: string | null
+          delivery_terms: string | null
+          delivery_time: string | null
           id: string
           is_archived: boolean
           issue_date: string | null
           note: string | null
           partner_id: string | null
+          payment_terms: string | null
           quote_number: string | null
           status: Database["public"]["Enums"]["quote_status"]
           updated_at: string
@@ -609,11 +612,14 @@ export type Database = {
           customer_dic?: string | null
           customer_ico?: string | null
           customer_name?: string | null
+          delivery_terms?: string | null
+          delivery_time?: string | null
           id?: string
           is_archived?: boolean
           issue_date?: string | null
           note?: string | null
           partner_id?: string | null
+          payment_terms?: string | null
           quote_number?: string | null
           status?: Database["public"]["Enums"]["quote_status"]
           updated_at?: string
@@ -631,11 +637,14 @@ export type Database = {
           customer_dic?: string | null
           customer_ico?: string | null
           customer_name?: string | null
+          delivery_terms?: string | null
+          delivery_time?: string | null
           id?: string
           is_archived?: boolean
           issue_date?: string | null
           note?: string | null
           partner_id?: string | null
+          payment_terms?: string | null
           quote_number?: string | null
           status?: Database["public"]["Enums"]["quote_status"]
           updated_at?: string

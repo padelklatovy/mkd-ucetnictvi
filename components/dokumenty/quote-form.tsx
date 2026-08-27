@@ -245,6 +245,40 @@ export function QuoteForm({
         )}
       </div>
 
+      {/* PODMÍNKY NABÍDKY */}
+      <div>
+        <h2 className="text-sm font-semibold text-slate-700 mb-2">Podmínky nabídky</h2>
+        <div className="grid grid-cols-3 gap-4">
+          {field(
+            "Dodací lhůta",
+            <input
+              name="delivery_time"
+              defaultValue={quote?.delivery_time ?? ""}
+              placeholder="10 prac. dní"
+              className={inputClass}
+            />
+          )}
+          {field(
+            "Doprava",
+            <input
+              name="delivery_terms"
+              defaultValue={quote?.delivery_terms ?? ""}
+              placeholder="zdarma"
+              className={inputClass}
+            />
+          )}
+          {field(
+            "Platební podmínky",
+            <input
+              name="payment_terms"
+              defaultValue={quote?.payment_terms ?? ""}
+              placeholder="faktura"
+              className={inputClass}
+            />
+          )}
+        </div>
+      </div>
+
       {/* POLOŽKY */}
       <div>
         <h2 className="text-sm font-semibold text-slate-700 mb-2">Položky</h2>
@@ -267,12 +301,12 @@ export function QuoteForm({
                 return (
                   <tr key={idx} className="border-b border-slate-50 last:border-0">
                     <td className="px-3 py-1.5">
-                      <input
+                      <textarea
                         value={it.description}
                         onChange={(e) => updateItem(idx, { description: e.target.value })}
                         className={inputClass}
-                        placeholder="Popis položky"
-                        list="popis-napoveda"
+                        placeholder={"Název položky\nVolitelný podnázev kurzívou (druhý řádek)"}
+                        rows={2}
                       />
                     </td>
                     <td className="px-3 py-1.5">
