@@ -216,7 +216,7 @@ export async function convertQuoteToInvoice(quoteId: string): Promise<void> {
       payment_bank_account: account ? `${account.name} ${account.account_number}` : null,
       payment_iban: account?.iban ?? null,
       status: "ceka_na_uhradu",
-      note: `Vytvořeno převodem z nabídky ${quote.quote_number ?? ""}.`,
+      note: null,
     })
     .select("id")
     .single();
