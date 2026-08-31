@@ -102,6 +102,12 @@ export default async function FakturaPage({ params }: { params: Promise<{ id: st
               Upravit fakturu
             </Link>
           ) : null}
+          <a
+            href={`/api/faktura-pdf/${document.id}`}
+            className="rounded-md border border-[#1e3a5f] bg-white px-4 py-2 text-sm font-medium text-[#1e3a5f] hover:bg-slate-50"
+          >
+            ⬇️ Stáhnout PDF
+          </a>
           <PrintButton />
         </div>
       </div>
