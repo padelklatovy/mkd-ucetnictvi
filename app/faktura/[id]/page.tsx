@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { formatCurrency, formatDate } from "@/lib/utils/format";
 import { calcLineTotal, generateSpdPayload, type InvoiceLineItem } from "@/lib/utils/invoice";
 import { PrintButton } from "@/components/dokumenty/print-button";
+import { DuplicateInvoiceButton } from "@/components/dokumenty/duplicate-invoice-button";
 
 export const dynamic = "force-dynamic";
 
@@ -95,12 +96,15 @@ export default async function FakturaPage({ params }: { params: Promise<{ id: st
         </Link>
         <div className="flex items-center gap-3">
           {document.doc_type === "faktura" ? (
-            <Link
-              href={`/vydane-doklady/${document.id}/uprava-faktury`}
-              className="text-sm text-[#1e3a5f] hover:underline"
-            >
-              Upravit fakturu
-            </Link>
+            <>
+              <Link
+                href={`/vydane-doklady/${document.id}/uprava-faktury`}
+                className="text-sm text-[#1e3a5f] hover:underline"
+              >
+                Upravit fakturu
+              </Link>
+              <DuplicateInvoiceButton invoiceId={document.id} />
+            </>
           ) : null}
           <a
             href={`/api/faktura-pdf/${document.id}`}
@@ -116,9 +120,9 @@ export default async function FakturaPage({ params }: { params: Promise<{ id: st
         <div className="flex justify-between items-start mb-8">
           <div>
             <h1 className="text-2xl font-semibold text-[#1e3a5f]">Faktura {document.document_number}</h1>
-            <p className="text-sm text-slate-600 mt-1">
-              {document.status === "zaplaceny" ? "UHRAZENO" : "NEUHRAZENO"}
-            </p>
+            {document.status === "zaplaceny" ? (
+              <p className="text-sm text-green-600 font-medium mt-1">UHRAZENO</p>
+            ) : null}
           </div>
           {qrDataUrl ? (
             <div className="text-center">

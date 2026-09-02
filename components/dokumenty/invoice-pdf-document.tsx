@@ -126,9 +126,9 @@ export function InvoicePdfDocument({
         <View style={styles.headerTop}>
           <View>
             <Text style={styles.title}>Faktura {document.document_number}</Text>
-            <Text style={styles.statusText}>
-              {document.status === "zaplaceny" ? "UHRAZENO" : "NEUHRAZENO"}
-            </Text>
+            {document.status === "zaplaceny" ? (
+              <Text style={{ ...styles.statusText, color: "#16a34a", fontWeight: 700 }}>UHRAZENO</Text>
+            ) : null}
           </View>
           {qrDataUrl ? (
             <View>

@@ -71,6 +71,71 @@ async function nextInvoiceNumber(
   return `${max + 1}/${month}/${year}`;
 }
 
+export async function duplicateInvoice(sourceId: string): Promise<void> {
+  const supabase = await createClient();
+
+  const [{ data: source }, { data: sourceItems }] = await Promise.all([
+    supabase.from("documents").select("*").eq("id", sourceId).single(),
+    supabase.from("document_line_items").select("*").eq("document_id", sourceId).order("position"),
+  ]);
+
+  if (!source) throw new Error("Faktura nenalezena.");
+
+  const documentNumber = await nextInvoiceNumber(supabase);
+  const todayIso = new Date().toISOString().slice(0, 10);
+  const dueDate = new Date();
+  dueDate.setDate(dueDate.getDate() + 14);
+
+  const { data: newDoc, error } = await supabase
+    .from("documents")
+    .insert({
+      company_id: DEFAULT_COMPANY_ID,
+      direction: "vydany",
+      doc_type: "faktura",
+      document_number: documentNumber,
+      partner_id: source.partner_id,
+      customer_name: source.customer_name,
+      customer_address: source.customer_address,
+      partner_ico: source.partner_ico,
+      partner_dic: source.partner_dic,
+      issue_date: todayIso,
+      taxable_supply_date: todayIso,
+      due_date: dueDate.toISOString().slice(0, 10),
+      amount_excl_vat: source.amount_excl_vat,
+      vat_amount: source.vat_amount,
+      amount_total: source.amount_total,
+      vat_rate: source.vat_rate,
+      currency: source.currency,
+      variable_symbol: documentNumber.replace(/\D/g, ""),
+      payment_method: source.payment_method,
+      payment_bank_account: source.payment_bank_account,
+      payment_iban: source.payment_iban,
+      status: "ceka_na_uhradu",
+      note: null,
+    })
+    .select("id")
+    .single();
+
+  if (error) throw new Error(error.message);
+
+  if (sourceItems && sourceItems.length > 0) {
+    const rows = sourceItems.map((it) => ({
+      company_id: DEFAULT_COMPANY_ID,
+      document_id: newDoc.id,
+      position: it.position,
+      description: it.description,
+      quantity: it.quantity,
+      unit: it.unit,
+      unit_price: it.unit_price,
+      vat_rate_percent: it.vat_rate_percent,
+    }));
+    await supabase.from("document_line_items").insert(rows);
+  }
+
+  revalidatePath("/vydane-doklady");
+  redirect(`/vydane-doklady/${newDoc.id}/uprava-faktury`);
+}
+
 export async function saveInvoice(formData: FormData): Promise<void> {
   const supabase = await createClient();
 
