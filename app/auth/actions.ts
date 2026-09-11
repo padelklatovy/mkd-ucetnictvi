@@ -45,3 +45,47 @@ export async function signOut() {
   await supabase.auth.signOut();
   redirect("/login");
 }
+
+function getSiteUrl() {
+  return process.env.NEXT_PUBLIC_SITE_URL || "https://mkd-ucetnictvi.vercel.app";
+}
+
+export async function requestPasswordReset(formData: FormData) {
+  const email = String(formData.get("email") ?? "");
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${getSiteUrl()}/auth/callback?next=/auth/nove-heslo`,
+  });
+
+  // Zamerne nehlasime, jestli e-mail v systemu existuje (bezpecnost) - vzdy
+  // stejna zprava, at nejde zjistit, kdo ma/nema ucet.
+  if (error) {
+    redirect(
+      `/login?message=${encodeURIComponent(
+        "Pokud e-mail existuje v appce, poslali jsme na něj odkaz na obnovu hesla."
+      )}`
+    );
+  }
+
+  redirect(
+    `/login?message=${encodeURIComponent(
+      "Pokud e-mail existuje v appce, poslali jsme na něj odkaz na obnovu hesla. Zkontrolujte i složku Spam."
+    )}`
+  );
+}
+
+export async function updatePassword(formData: FormData) {
+  const password = String(formData.get("password") ?? "");
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.updateUser({ password });
+
+  if (error) {
+    redirect(`/auth/nove-heslo?error=${encodeURIComponent(error.message)}`);
+  }
+
+  redirect(
+    `/login?message=${encodeURIComponent("Heslo bylo změněno. Přihlaste se novým heslem.")}`
+  );
+}

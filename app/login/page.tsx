@@ -1,4 +1,4 @@
-import { signIn, signUp } from "@/app/auth/actions";
+import { signIn, signUp, requestPasswordReset } from "@/app/auth/actions";
 
 const inputClass =
   "w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus:border-[#1e3a5f] focus:outline-none focus:ring-1 focus:ring-[#1e3a5f]";
@@ -43,6 +43,27 @@ export default async function LoginPage({
             Přihlásit se
           </button>
         </form>
+
+        <details className="mt-4">
+          <summary className="cursor-pointer text-xs text-slate-500 hover:text-slate-700">
+            Zapomenuté heslo?
+          </summary>
+          <form action={requestPasswordReset} className="space-y-3 mt-3">
+            <input
+              type="email"
+              name="email"
+              placeholder="E-mail"
+              required
+              className={inputClass}
+            />
+            <button
+              type="submit"
+              className="w-full rounded-md border border-slate-300 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
+            >
+              Poslat odkaz na obnovu hesla
+            </button>
+          </form>
+        </details>
 
         <details className="mt-6">
           <summary className="cursor-pointer text-xs text-slate-500 hover:text-slate-700">
