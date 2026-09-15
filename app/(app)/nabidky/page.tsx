@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { DEFAULT_COMPANY_ID } from "@/lib/config";
 import { formatCurrency, formatDate } from "@/lib/utils/format";
 import { DeleteQuoteButton } from "@/components/dokumenty/delete-quote-button";
+import { ConvertToInvoiceButton } from "@/components/dokumenty/convert-to-invoice-button";
 
 export const dynamic = "force-dynamic";
 
@@ -79,12 +80,15 @@ export default async function NabidkyPage() {
                   <td className="px-4 py-2.5 text-right">
                     <div className="flex items-center justify-end gap-3">
                       {q.status !== "prevedena" ? (
-                        <Link
-                          href={`/nabidky/${q.id}/uprava`}
-                          className="text-xs text-[#1e3a5f] hover:underline"
-                        >
-                          Upravit
-                        </Link>
+                        <>
+                          <Link
+                            href={`/nabidky/${q.id}/uprava`}
+                            className="text-xs text-[#1e3a5f] hover:underline"
+                          >
+                            Upravit
+                          </Link>
+                          <ConvertToInvoiceButton quoteId={q.id} compact />
+                        </>
                       ) : q.converted_to_document_id ? (
                         <Link
                           href={`/faktura/${q.converted_to_document_id}`}
